@@ -95,19 +95,11 @@ paths:
     get:
       summary: Get validator by public key
       parameters:
-        - {name: publicKey, in: query, required: true, schema: {type: string}, description: "The hash of the validator" }
+        - {name: publicKey, in: query, required: true,  schema: {type: string}, description: "The hash of the validator" }
+        - {name: uptime,    in: query, required: false, schema: {type: number}, description: "Count uptime over past X blocks" }
       responses:
         '404': {description: "Not found"}
         '200': {content:{application/json:{schema:{$ref:'#/components/schemas/ValidatorDetails'}}}}
-
-  /validator/uptime/{address}:
-    get:
-      summary: Get validator uptime
-      parameters:
-        - {name: address, in: path, required: true, schema: {type: string}, description: "The address of the validator"}
-      responses:
-        '404': {description: "Not found"}
-        '200': {content:{application/json:{schema:{$ref:'#/components/schemas/ValidatorUptime'}}}}
 
   /proposals:
     get:
