@@ -1,6 +1,6 @@
 import express from 'express';
 import { Console, bold, colors } from '@hackbg/logs';
-import { Op } from 'sequelize';
+import { Op, literal } from 'sequelize';
 import * as DB from './db.js';
 import * as RPC from './rpc.js';
 import * as Query from './query.js';
@@ -90,7 +90,7 @@ export const routes = [
     const { state } = req.query
     const where = {}
     if (state) where['state.state'] = state
-    const order = [['stake', 'DESC']]
+    const order = [literal('"stake" collate "numeric" DESC')]
     const attrs = Query.defaultAttributes({ exclude: ['id'] })
     const { count, rows: validators } = await DB.Validator.findAndCountAll({
       where, order, limit, offset, attributes: attrs
