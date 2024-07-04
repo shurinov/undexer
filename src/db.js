@@ -17,7 +17,7 @@ const db = new Sequelize(DATABASE_URL, {
 
 // Allow sorting strings as numbers.
 // See https://github.com/sequelize/sequelize/discussions/15529#discussioncomment-4601186
-await sequelize.query(`CREATE COLLATION IF NOT EXISTS numeric (provider = icu, locale = 'en-u-kn-true')`);
+await db.query(`CREATE COLLATION IF NOT EXISTS numeric (provider = icu, locale = 'en-u-kn-true')`);
 
 export default db
 
