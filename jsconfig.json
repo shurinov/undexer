@@ -1,0 +1,9 @@
+{
+  "include": [
+    "main.ts",
+  ],
+  "exclude": [
+    "node_modules",
+    "fadroma"
+  ]
+}
