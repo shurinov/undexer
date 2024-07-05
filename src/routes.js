@@ -117,25 +117,34 @@ export const routes = [
     if (validator === null) return res.status(404).send({ error: 'Validator not found' });
     validator = { ...validator.get() }
     validator.metadata ??= {}
-    let uptime, currentHeight, countedBlocks
+    let uptime, signedBlocks, currentHeight, countedBlocks
     if (validator.address && ('uptime' in req.query)) {
-      const limit = Math.min(1000, Number(req.query.uptime)||100);
       // Count number of times the validator's consensus address is encountered
       // in the set of all signatures belonging to the past 100 blocks.
       // This powers the uptime blocks visualization in the validator detail page.
-      const latestBlocks = await DB.Block.findAll({
-        order: [['blockHeight', 'DESC']], limit, attributes: ['rpcResponses', 'blockHeight'],
-      });
+      const order = [['blockHeight', 'DESC']]
+      const limit = Math.min(1000, Number(req.query.uptime)||100);
+      const attributes = ['blockHeight', 'rpcResponses']
+      const latestBlocks = await DB.Block.findAll({ order, limit, attributes })
       currentHeight = latestBlocks[0].height;
       countedBlocks = latestBlocks.length;
-      uptime = latestBlocks
-        .map((b) => JSON.parse(b.rpcResponses.block.response)
-          .result.block.last_commit.signatures.map((x) => x.validator_address))
-        .flat(1)
-        .filter((x) => x === validator.address)
-        .length;
+      // FIXME: A little spicy at 100 json parses per request
+      signedBlocks = latestBlocks.map((b) => {
+        console.log('.')
+        const { blockHeight, rpcResponses: { block: { response } } } = b.get()
+        const { result: { block: { last_commit: { signatures } } } } = JSON.parse(response)
+        const presence = signatures.some(s=>s.validator_address == validator.address)
+        return [blockHeight, presence]
+      }).filter((x)=>x[1]===true).map(x=>x[0]);
+      uptime = signedBlocks.length;
     }
-    res.status(200).send({ ...validator, uptime, currentHeight, countedBlocks  });
+    res.status(200).send({
+      currentHeight,
+      ...validator,
+      uptime,
+      signedBlocks,
+      countedBlocks,
+    });
   }],
 
   ['/proposals', async function dbProposals (req, res) {
