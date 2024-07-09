@@ -17,7 +17,8 @@ RUN apk add git
 WORKDIR /app
 ADD . ./
 RUN pwd && ls -al
-RUN corepack enable && pnpm i --frozen-lockfile
+RUN npm i -g pnpm
+RUN pnpm i --frozen-lockfile
 
 COPY --from=wasm /build/fadroma-namada/pkg/fadroma_namada_bg.wasm ./fadroma/packages/namada/pkg/fadroma_namada_bg.wasm
 
