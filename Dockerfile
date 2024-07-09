@@ -11,7 +11,7 @@ COPY ./fadroma/packages/namada/src ./src
 RUN PATH=$PATH:~/.cargo/bin wasm-pack build --release --target web \
  && rm -rf target
 
-FROM node:21-alpine@sha256:6d0f18a1c67dc218c4af50c21256616286a53c09e500fadf025b6d342e1c90ae
+FROM node:22.4-alpine3.20
 
 RUN apk add git
 WORKDIR /app
