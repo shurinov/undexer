@@ -109,5 +109,5 @@ export async function rpcProtocolParameters (req, res) {
 }
 
 const filterBigInts = obj => JSON.parse(
-  JSON.stringify(obj, (k, v) => (typeof v === 'bigint') : String(v) : v)
+  JSON.stringify(obj, (k, v) => (typeof v === 'bigint') ? String(v) : v)
 )
