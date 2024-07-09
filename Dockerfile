@@ -2,7 +2,7 @@ FROM rust:1.77-alpine3.18@sha256:4c640cb99e88d7e7873a25e5dc693999cd4c5a0f486b543
 
 RUN apk add musl-dev protoc protobuf-dev openssl-dev cmake build-base
 RUN rustup target add wasm32-unknown-unknown
-RUN cargo install wasm-pack
+RUN cargo install wasm-pack wasm-bindgen
 
 WORKDIR /build/fadroma-namada
 COPY ./fadroma/packages/namada/Cargo.toml ./fadroma/packages/namada/Cargo.lock .
