@@ -119,4 +119,14 @@ export default class UndexerCommands extends Commands {
     }
   })
 
+  parameters = this.command({
+    name: 'parameters',
+    info: 'fetch chain parameters'
+  }, async () => {
+    const { default: getRPC } = await import('./src/rpc.js')
+    const chain      = await getRPC()
+    const parameters = await chain.fetchProtocolParameters()
+    console.log({parameters})
+  })
+
 }
