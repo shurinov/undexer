@@ -87,25 +87,25 @@ export async function rpcEpoch (req, res) {
 export async function rpcStakingParameters (req, res) {
   const chain = await getRPC()
   const parameters = await chain.fetchStakingParameters();
-  res.status(200).send(filterBigInts(parameters);
+  res.status(200).send(filterBigInts(parameters));
 }
 
 export async function rpcGovernanceParameters (req, res) {
   const chain = await getRPC();
   const parameters = await chain.fetchGovernanceParameters();
-  res.status(200).send(filterBigInts(parameters);
+  res.status(200).send(filterBigInts(parameters));
 }
 
 export async function rpcPGFParameters (req, res) {
   const chain = await getRPC();
   const parameters = await chain.fetchPGFParameters();
-  res.status(200).send(filterBigInts(parameters);
+  res.status(200).send(filterBigInts(parameters));
 }
 
 export async function rpcProtocolParameters (req, res) {
   const chain = await getRPC();
   const param = await chain.fetchProtocolParameters();
-  res.status(200).send(filterBigInts(param);
+  res.status(200).send(filterBigInts(param));
 }
 
 const filterBigInts = obj => JSON.parse(
