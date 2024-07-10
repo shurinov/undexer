@@ -118,8 +118,9 @@ export const
     ...blockMeta(),
     blockHash:    StringPrimaryKey(),
     blockHeader:  JSONField('blockHeader'),
-    //blockResults: JSONField('blockResults'), // TODO deserialize results response
     rpcResponses: JSONField('rpcResponses'),
+    blockData:    NullableJSONField('blockData'),
+    blockResults: NullableJSONField('blockResults'),
   }),
 
   Transaction = db.define('transaction', {

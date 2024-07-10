@@ -61,6 +61,8 @@ export async function updateBlock ({
       blockHeight:  block.height,
       blockHash:    block.hash,
       blockHeader:  block.header,
+      blockData:    JSON.parse(block.responses?.block.response||"null"),
+      blockResults: JSON.parse(block.responses?.results.response||"null"),
       rpcResponses: block.responses,
     }
     await DB.Block.create(data, { transaction: dbTransaction });

@@ -43,12 +43,8 @@ export const routes = [
     if (before && after) {
       return res.status(400).send({ error: "Don't use before and after together" })
     }
-    const results = await Query.blocks({
-      before,
-      after,
-      limit,
-      publicKey: req?.query?.publicKey
-    })
+    const query = { before, after, limit, publicKey: req?.query?.publicKey }
+    const results = await Query.blocks(query)
     res.status(200).send({ timestamp, chainId, ...results })
   }],
 
