@@ -120,15 +120,13 @@ export const routes = [
       // This powers the uptime blocks visualization in the validator detail page.
       const order = [['blockHeight', 'DESC']]
       const limit = Math.min(1000, Number(req.query.uptime)||100);
-      const attributes = ['blockHeight', 'rpcResponses']
+      const attributes = ['blockHeight', 'blockData']
       const latestBlocks = await DB.Block.findAll({ order, limit, attributes })
       currentHeight = latestBlocks[0].height;
       countedBlocks = latestBlocks.length;
-      // FIXME: A little spicy at 100 json parses per request
       lastSignedBlocks = latestBlocks.map((b) => {
-        console.log('.')
-        const { blockHeight, rpcResponses: { block: { response } } } = b.get()
-        const { result: { block: { last_commit: { signatures } } } } = JSON.parse(response)
+        const { blockHeight, blockData = { last_commit: { signatures: [] } } } = b.get()
+        const { block: { last_commit: { signatures } } } = blockData
         const presence = signatures.some(s=>s.validator_address == validator.address)
         return [blockHeight, presence]
       }).filter((x)=>x[1]===true).map(x=>x[0]);
