@@ -126,8 +126,10 @@ export const routes = [
       countedBlocks = latestBlocks.length;
       lastSignedBlocks = latestBlocks.map((b) => {
         const { blockHeight, blockData } = b.get()
-        const signatures = blockData || { result: { block: { last_commit: { signatures: [] } } } }
-        const presence = signatures.some(s=>s.validator_address == validator.address)
+        const data = blockData ||
+          { result: { block: { last_commit: { signatures: [] } } } }
+        const presence = data.result.block.last_commit.signatures
+          .some(s=>s.validator_address == validator.address)
         return [blockHeight, presence]
       }).filter((x)=>x[1]===true).map(x=>x[0]);
       uptime = lastSignedBlocks.length;
