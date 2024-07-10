@@ -125,8 +125,8 @@ export const routes = [
       currentHeight = latestBlocks[0].height;
       countedBlocks = latestBlocks.length;
       lastSignedBlocks = latestBlocks.map((b) => {
-        const { blockHeight, blockData = { last_commit: { signatures: [] } } } = b.get()
-        const { block: { last_commit: { signatures } } } = blockData
+        const { blockHeight, blockData } = b.get()
+        const signatures = blockData || { result: { block: { last_commit: { signatures: [] } } } }
         const presence = signatures.some(s=>s.validator_address == validator.address)
         return [blockHeight, presence]
       }).filter((x)=>x[1]===true).map(x=>x[0]);
