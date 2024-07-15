@@ -129,7 +129,7 @@ export const routes = [
         blockData = { result: { block: { last_commit: { signatures: [] } } } }
       } of latestBlocks) {
         let present = false
-        for (const { validator_address } of data.result.block.last_commit.signatures) {
+        for (const { validator_address } of blockData.result.block.last_commit.signatures) {
           if (validator_address === validator.address) {
             present = true
             break
