@@ -113,7 +113,7 @@ export const routes = [
     if (validator === null) return res.status(404).send({ error: 'Validator not found' });
     validator = { ...validator.get() }
     validator.metadata ??= {}
-    let uptime, lastSignedBlocks, currentHeight, countedBlocks
+    let uptime, lastSignedBlocks = [], currentHeight, countedBlocks
     if (validator.address && ('uptime' in req.query)) {
       // Count number of times the validator's consensus address is encountered
       // in the set of all signatures belonging to the past 100 blocks.
@@ -124,15 +124,22 @@ export const routes = [
       const latestBlocks = await DB.Block.findAll({ order, limit, attributes })
       currentHeight = latestBlocks[0].height;
       countedBlocks = latestBlocks.length;
-      lastSignedBlocks = latestBlocks.map((b) => {
-        const { blockHeight, blockData } = b.get()
-        const data = blockData ||
-          { result: { block: { last_commit: { signatures: [] } } } }
-        const presence = data.result.block.last_commit.signatures
-          .some(s=>s.validator_address == validator.address)
-        return [blockHeight, presence]
-      }).filter((x)=>x[1]===true).map(x=>x[0]);
-      uptime = lastSignedBlocks.length;
+      for (const {
+        blockHeight,
+        blockData = { result: { block: { last_commit: { signatures: [] } } } }
+      } of latestBlocks) {
+        let present = false
+        for (const { validator_address } of data.result.block.last_commit.signatures) {
+          if (validator_address === validator.address) {
+            present = true
+            break
+          }
+        }
+        if (present) {
+          lastSignedBlocks.push(blockHeight)
+          uptime++
+        }
+      }
     }
     res.status(200).send({
       currentHeight,
