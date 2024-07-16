@@ -92,7 +92,19 @@ export default class UndexerCommands extends Commands {
     info: 'query validators from db'
   }, async (height: number) => {
     const { validatorsTop } = await import('./src/query.js')
-    console.log((await validatorsTop()).map(x=>x.toJSON()))
+    const validators = (await validatorsTop()).map(x=>x.toJSON());
+    console.log(validators)
+    const { routes } = await import('./src/routes.js')
+    const dbValidatorByHash = Object.fromEntries(routes)['/validator']
+    for (const { publicKey } of validators) {
+      console.log(await new Promise((resolve, reject)=>dbValidatorByHash(
+        { query: { publicKey, uptime: 100 } },
+        { status: code => ({
+            send: (data) => (code===200)
+              ? resolve(data)
+              : reject(Object.assign(new Error(`route returned ${code}`), data))
+          }) } )))
+    }
   })
 
   queries = this.command({
@@ -105,6 +117,16 @@ export default class UndexerCommands extends Commands {
         this.log(await item())
       }
     }
+  })
+
+  parameters = this.command({
+    name: 'parameters',
+    info: 'fetch chain parameters'
+  }, async () => {
+    const { default: getRPC } = await import('./src/rpc.js')
+    const chain      = await getRPC()
+    const parameters = await chain.fetchProtocolParameters()
+    console.log({parameters})
   })
 
 }

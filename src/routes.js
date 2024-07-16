@@ -1,6 +1,6 @@
 import express from 'express';
 import { Console, bold, colors } from '@hackbg/logs';
-import { Op } from 'sequelize';
+import { Op, literal } from 'sequelize';
 import * as DB from './db.js';
 import * as RPC from './rpc.js';
 import * as Query from './query.js';
@@ -43,12 +43,8 @@ export const routes = [
     if (before && after) {
       return res.status(400).send({ error: "Don't use before and after together" })
     }
-    const results = await Query.blocks({
-      before,
-      after,
-      limit,
-      publicKey: req?.query?.publicKey
-    })
+    const query = { before, after, limit, publicKey: req?.query?.publicKey }
+    const results = await Query.blocks(query)
     res.status(200).send({ timestamp, chainId, ...results })
   }],
 
@@ -90,7 +86,7 @@ export const routes = [
     const { state } = req.query
     const where = {}
     if (state) where['state.state'] = state
-    const order = [['stake', 'DESC']]
+    const order = [literal('"stake" collate "numeric" DESC')]
     const attrs = Query.defaultAttributes({ exclude: ['id'] })
     const { count, rows: validators } = await DB.Validator.findAndCountAll({
       where, order, limit, offset, attributes: attrs
@@ -117,25 +113,41 @@ export const routes = [
     if (validator === null) return res.status(404).send({ error: 'Validator not found' });
     validator = { ...validator.get() }
     validator.metadata ??= {}
-    let uptime, currentHeight, countedBlocks
+    let uptime, lastSignedBlocks = [], currentHeight, countedBlocks
     if (validator.address && ('uptime' in req.query)) {
-      const limit = Math.min(1000, Number(req.query.uptime)||100);
       // Count number of times the validator's consensus address is encountered
       // in the set of all signatures belonging to the past 100 blocks.
       // This powers the uptime blocks visualization in the validator detail page.
-      const latestBlocks = await DB.Block.findAll({
-        order: [['blockHeight', 'DESC']], limit, attributes: ['rpcResponses', 'blockHeight'],
-      });
+      const order = [['blockHeight', 'DESC']]
+      const limit = Math.min(1000, Number(req.query.uptime)||100);
+      const attributes = ['blockHeight', 'blockData']
+      const latestBlocks = await DB.Block.findAll({ order, limit, attributes })
       currentHeight = latestBlocks[0].height;
       countedBlocks = latestBlocks.length;
-      uptime = latestBlocks
-        .map((b) => JSON.parse(b.rpcResponses.block.response)
-          .result.block.last_commit.signatures.map((x) => x.validator_address))
-        .flat(1)
-        .filter((x) => x === validator.address)
-        .length;
+      for (const {
+        blockHeight,
+        blockData = { result: { block: { last_commit: { signatures: [] } } } }
+      } of latestBlocks) {
+        let present = false
+        for (const { validator_address } of blockData.result.block.last_commit.signatures) {
+          if (validator_address === validator.address) {
+            present = true
+            break
+          }
+        }
+        if (present) {
+          lastSignedBlocks.push(blockHeight)
+          uptime++
+        }
+      }
     }
-    res.status(200).send({ ...validator, uptime, currentHeight, countedBlocks  });
+    res.status(200).send({
+      currentHeight,
+      ...validator,
+      uptime,
+      lastSignedBlocks,
+      countedBlocks,
+    });
   }],
 
   ['/proposals', async function dbProposals (req, res) {

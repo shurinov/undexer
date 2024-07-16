@@ -75,7 +75,7 @@ export async function rpcEpoch (req, res) {
     chain.fetchEpochFirstBlock(),
     chain.fetchEpochDuration(),
   ])
-  res.status(200).send(stringifyTopLevelBigInts({
+  res.status(200).send(filterBigInts({
     timestamp:  new Date().toISOString(),
     chainId:    CHAIN_ID,
     epoch:      String(epoch),
@@ -87,36 +87,27 @@ export async function rpcEpoch (req, res) {
 export async function rpcStakingParameters (req, res) {
   const chain = await getRPC()
   const parameters = await chain.fetchStakingParameters();
-  stringifyTopLevelBigInts(parameters);
-  res.status(200).send(parameters);
+  res.status(200).send(filterBigInts(parameters));
 }
 
 export async function rpcGovernanceParameters (req, res) {
   const chain = await getRPC();
   const parameters = await chain.fetchGovernanceParameters();
-  stringifyTopLevelBigInts(parameters);
-  res.status(200).send(parameters);
+  res.status(200).send(filterBigInts(parameters));
 }
 
 export async function rpcPGFParameters (req, res) {
   const chain = await getRPC();
   const parameters = await chain.fetchPGFParameters();
-  stringifyTopLevelBigInts(parameters);
-  res.status(200).send(parameters);
+  res.status(200).send(filterBigInts(parameters));
 }
 
 export async function rpcProtocolParameters (req, res) {
   const chain = await getRPC();
   const param = await chain.fetchProtocolParameters();
-  stringifyTopLevelBigInts(param);
-  res.status(200).send(param);
+  res.status(200).send(filterBigInts(param));
 }
 
-function stringifyTopLevelBigInts (obj) {
-  for (const key in obj) {
-    if (typeof obj[key] === 'bigint') {
-      obj[key] = String(obj[key])
-    }
-  }
-  return obj
-}
+const filterBigInts = obj => JSON.parse(
+  JSON.stringify(obj, (k, v) => (typeof v === 'bigint') ? String(v) : v)
+)

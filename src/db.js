@@ -15,6 +15,16 @@ const db = new Sequelize(DATABASE_URL, {
   supportBigNumbers: true,
 })
 
+// Allow sorting strings as numbers.
+// See https://github.com/sequelize/sequelize/discussions/15529#discussioncomment-4601186
+try {
+  await db.query(
+    `CREATE COLLATION IF NOT EXISTS numeric (provider = icu, locale = 'en-u-kn-true')`
+  )
+} catch (e) {
+  console.warn('FIXME: CREATE COLLATION threw.')
+}
+
 export default db
 
 export const IntegerPrimaryKey = (autoIncrement = false) => ({
@@ -108,8 +118,9 @@ export const
     ...blockMeta(),
     blockHash:    StringPrimaryKey(),
     blockHeader:  JSONField('blockHeader'),
-    //blockResults: JSONField('blockResults'), // TODO deserialize results response
     rpcResponses: JSONField('rpcResponses'),
+    blockData:    NullableJSONField('blockData'),
+    blockResults: NullableJSONField('blockResults'),
   }),
 
   Transaction = db.define('transaction', {
