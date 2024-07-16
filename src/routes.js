@@ -68,7 +68,7 @@ export const routes = [
       blockHash:        block.blockHash,
       blockHeader:      block.blockHeader,
       blockTime:        block.blockTime,
-      transactionCount: transactions.scount,
+      transactionCount: transactions.count,
       transactions:     transactions.rows.map(row=>row.toJSON()),
     })
   }],
@@ -191,13 +191,6 @@ export const routes = [
     const { limit, offset } = pagination(req)
     const { by, from, to } = req.query
     throw new Error('not implemented')
-    //const { count, rows } = await Content.Transfer.findAndCountAll({
-      //limit,
-      //offset,
-      //where: { source: req.params.address, },
-      //attributes: { exclude: ['createdAt', 'updatedAt'], },
-    //});
-    res.status(200).send({ count, transfers: rows });
   }],
 
   //['/height',                     RPC.rpcHeight],
