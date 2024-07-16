@@ -64,8 +64,9 @@ export const routes = [
       blockHash:        block.blockHash,
       blockHeader:      block.blockHeader,
       blockTime:        block.blockTime,
+      signatures:       block.signatures,
       transactionCount: transactions.count,
-      transactions:     transactions.rows.map(row=>row.toJSON()),
+      transactions:     transactions.rows.map(row => row.toJSON()),
     })
   }],
 
