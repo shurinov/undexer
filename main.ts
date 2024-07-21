@@ -11,12 +11,32 @@ export default class UndexerCommands extends Commands {
   }
 
   sync = this.command({
-    name: "unsafe-sync",
-    info: "delete database and recreate with up-to-date schema"
+    name: "sync",
+    info: "create database"
   }, async () => {
-    this.log.br().log('Synchronizing database...')
+    this.log.br().log('Creating database...')
+    const { default: db } = await import('./src/db.js')
+    await db.sync()
+    this.log.br().log('Done.')
+  })
+
+  syncForce = this.command({
+    name: "sync drop",
+    info: "UNSAFE: delete and re-create database with latest schema"
+  }, async () => {
+    this.log.br().log('Recreating database...')
     const { default: db } = await import('./src/db.js')
     await db.sync({ force: true })
+    this.log.br().log('Done.')
+  })
+
+  syncAlter = this.command({
+    name: "sync alter",
+    info: "UNSAFE: alter database to latest schema"
+  }, async () => {
+    this.log.br().log('Altering database...')
+    const { default: db } = await import('./src/db.js')
+    await db.sync({ alter: true })
     this.log.br().log('Done.')
   })
 
