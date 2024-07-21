@@ -31,13 +31,16 @@ events.on("updateProposal", updateProposal)
 console.log('🚀 Begin indexing!')
 import {
   BLOCK_UPDATE_INTERVAL,
+  EPOCH_UPDATE_INTERVAL,
   VALIDATOR_UPDATE_INTERVAL,
   PROPOSAL_UPDATE_INTERVAL
 } from "../src/config.js"
 import { runForever } from '../src/utils.js'
-import { checkForNewBlock } from '../src/block.js'
+import { tryUpdateBlocks } from '../src/block.js'
+import { tryUpdateEpochs } from '../src/epoch.js'
 await Promise.all([
-  runForever(BLOCK_UPDATE_INTERVAL,     checkForNewBlock, chain, events),
+  runForever(BLOCK_UPDATE_INTERVAL,     tryUpdateBlocks,     chain, events),
+  runForever(EPOCH_UPDATE_INTERVAL,     tryUpdateEpochs,     chain),
   runForever(VALIDATOR_UPDATE_INTERVAL, tryUpdateValidators, chain),
-  runForever(PROPOSAL_UPDATE_INTERVAL,  tryUpdateProposals, chain),
+  runForever(PROPOSAL_UPDATE_INTERVAL,  tryUpdateProposals,  chain),
 ])

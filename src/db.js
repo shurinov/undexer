@@ -116,6 +116,7 @@ export const
 
   Block = db.define('block', {
     ...blockMeta(),
+    epoch:        { type: INTEGER, allowNull: true },
     blockHash:    StringPrimaryKey(),
     blockHeader:  JSONField('blockHeader'),
     rpcResponses: JSONField('rpcResponses'),
