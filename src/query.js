@@ -1,6 +1,6 @@
 import db from './db.js'
 import * as DB from './db.js'
-import { Op } from "sequelize"
+import { Sequelize, Op } from "sequelize"
 import { intoRecord } from '@hackbg/into'
 
 export const totalTransactions = () =>
@@ -143,6 +143,15 @@ export const blocks = async ({
     //attributes: Query.defaultAttributes({ include: ['blockHash', 'blockHeight', 'blockTime'] }),
   //})
 
+export const blocksLatest = ({ limit, address }) =>
+  DB.Block.findAndCountAll({
+    attributes: BLOCK_LIST_ATTRIBUTES,
+    order: [['blockHeight', 'DESC']],
+    limit,
+    where: Object.assign({},
+      address ? { 'blockHeader.proposerAddress': address } : {})
+  })
+
 export const blocksBefore = ({ before, limit = 15, address }) =>
   DB.Block.findAndCountAll({
     attributes: BLOCK_LIST_ATTRIBUTES,
@@ -158,15 +167,6 @@ export const blocksAfter = ({ after, limit = 15, address }) =>
     order: [['blockHeight', 'ASC']],
     limit,
     where: Object.assign({ blockHeight: { [Op.gte]: after } },
-      address ? { 'blockHeader.proposerAddress': address } : {})
-  })
-
-export const blocksLatest = ({ limit, address }) =>
-  DB.Block.findAndCountAll({
-    attributes: BLOCK_LIST_ATTRIBUTES,
-    order: [['blockHeight', 'DESC']],
-    limit,
-    where: Object.assign({},
       address ? { 'blockHeader.proposerAddress': address } : {})
   })
 
@@ -193,6 +193,50 @@ export const blockByHeightWithTransactions = (blockHeight = 0) => {
     DB.Transaction.findAndCountAll({ where, attributes: defaultAttributes() }),
   ])
 }
+
+export const epochs = async ({ limit = 10, before, after }) => {
+  const { rows, count } =
+    await (before ? epochsBefore({ before, limit }) :
+           after  ? epochsAfter({ after, limit }) :
+                    epochsLatest({ limit }))
+  
+}
+
+export const epochsLatest = ({ limit = 10 }) => DB.Block.findAndCountAll({
+  where: { "epoch": { [Op.not]: null } },
+  attributes: [
+    "epoch",
+    [Sequelize.fn("MIN", Sequelize.col("blockHeight")), "minBlockHeight"],
+    [Sequelize.fn("MAX", Sequelize.col("blockHeight")), "maxBlockHeight"],
+  ],
+  order: [['epoch', 'DESC']],
+  group: "epoch",
+  limit,
+})
+
+export const epochsBefore = ({ limit = 10, before }) => DB.Block.findAndCountAll({
+  where: { "epoch": { [Op.not]: null, [Op.lte]: before } },
+  attributes: [
+    "epoch",
+    [Sequelize.fn("MIN", Sequelize.col("blockHeight")), "minBlockHeight"],
+    [Sequelize.fn("MAX", Sequelize.col("blockHeight")), "maxBlockHeight"],
+  ],
+  order: [['epoch', 'DESC']],
+  group: "epoch",
+  limit,
+})
+
+export const epochsAfter = ({ limit = 10, after }) => DB.Block.findAndCountAll({
+  where: { "epoch": { [Op.not]: null, [Op.gte]: after } },
+  attributes: [
+    "epoch",
+    [Sequelize.fn("MIN", Sequelize.col("blockHeight")), "minBlockHeight"],
+    [Sequelize.fn("MAX", Sequelize.col("blockHeight")), "maxBlockHeight"],
+  ],
+  order: [['epoch', 'ASC']],
+  group: "epoch",
+  limit,
+})
 
 export const transactionByHash = txHash => {
   const where = { txHash };

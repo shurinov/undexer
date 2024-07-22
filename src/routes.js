@@ -18,7 +18,17 @@ export const routes = [
     res.status(200).send({ timestamp, chainId, ...overview })
   }],
 
-  ['/epoch',                 RPC.rpcEpoch],
+  ['/epoch',  RPC.rpcEpoch],
+  ['/epochs', async function dbEpochs (req, res) {
+    const timestamp = new Date().toISOString()
+    const { limit, before, after } = relativePagination(req)
+    if (before && after) {
+      return res.status(400).send({ error: "Don't use before and after together" })
+    }
+    const blocks = await Query.epochs({ limit, before, after })
+    res.status(200).send({ timestamp, blocks })
+  }],
+
   ['/total-staked',          RPC.rpcTotalStaked],
   [`/parameters`,            RPC.rpcProtocolParameters],
   [`/parameters/staking`,    RPC.rpcStakingParameters],
