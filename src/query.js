@@ -194,15 +194,12 @@ export const blockByHeightWithTransactions = (blockHeight = 0) => {
   ])
 }
 
-export const epochs = async ({ limit = 10, before, after }) => {
-  const { rows, count } =
-    await (before ? epochsBefore({ before, limit }) :
-           after  ? epochsAfter({ after, limit }) :
-                    epochsLatest({ limit }))
-  
-}
+export const epochs = ({ limit = 10, before, after }) =>
+  before ? epochsBefore({ before, limit }) :
+   after ? epochsAfter({ after, limit })   :
+           epochsLatest({ limit })
 
-export const epochsLatest = ({ limit = 10 }) => DB.Block.findAndCountAll({
+export const epochsLatest = ({ limit = 10 }) => DB.Block.findAll({
   where: { "epoch": { [Op.not]: null } },
   attributes: [
     "epoch",
@@ -214,7 +211,7 @@ export const epochsLatest = ({ limit = 10 }) => DB.Block.findAndCountAll({
   limit,
 })
 
-export const epochsBefore = ({ limit = 10, before }) => DB.Block.findAndCountAll({
+export const epochsBefore = ({ limit = 10, before }) => DB.Block.findAll({
   where: { "epoch": { [Op.not]: null, [Op.lte]: before } },
   attributes: [
     "epoch",
@@ -226,7 +223,7 @@ export const epochsBefore = ({ limit = 10, before }) => DB.Block.findAndCountAll
   limit,
 })
 
-export const epochsAfter = ({ limit = 10, after }) => DB.Block.findAndCountAll({
+export const epochsAfter = ({ limit = 10, after }) => DB.Block.findAll({
   where: { "epoch": { [Op.not]: null, [Op.gte]: after } },
   attributes: [
     "epoch",
