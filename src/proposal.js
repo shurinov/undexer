@@ -27,6 +27,9 @@ export async function updateProposal (chain, id, height) {
     votes,
     result,
   } = await chain.fetchProposalInfo(id)
+  if (metadata?.type?.ops instanceof Set) {
+    metadata.type.ops = [...metadata.type.ops]
+  }
   await DB.withErrorLog(() => DB.default.transaction(async dbTransaction => {
     await DB.Proposal.destroy({ where: { id } }, { transaction: dbTransaction })
     await DB.Proposal.create({ id, content, metadata, result }, { transaction: dbTransaction })
