@@ -5,7 +5,9 @@ const console = new Console('Epoch')
 
 export async function tryUpdateEpochs (chain) {
   const block = await DB.Block.findOne({
-    where: { epoch: null }, attributes: { include: [ 'blockHeight' ] }
+    where: { epoch: null },
+    attributes: { include: [ 'blockHeight' ] },
+    order: [['blockHeight', 'DESC']],
   })
   if (block) {
     console.log(`=> Fetching epoch for block ${block.blockHeight}`)
