@@ -10,7 +10,7 @@ import { cleanup } from './utils.js'
 
 const console = new Console('Block')
 
-export async function checkForNewBlock (
+export async function tryUpdateBlocks (
   chain,
   events
 ) {
