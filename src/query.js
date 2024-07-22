@@ -203,8 +203,8 @@ export const epochsLatest = ({ limit = 10 }) => DB.Block.findAll({
   where: { "epoch": { [Op.not]: null } },
   attributes: [
     "epoch",
-    [Sequelize.fn("MIN", Sequelize.col("blockHeight")), "minBlockHeight"],
     [Sequelize.fn("MAX", Sequelize.col("blockHeight")), "maxBlockHeight"],
+    [Sequelize.fn("MIN", Sequelize.col("blockHeight")), "minBlockHeight"],
   ],
   order: [['epoch', 'DESC']],
   group: "epoch",
@@ -215,8 +215,8 @@ export const epochsBefore = ({ limit = 10, before }) => DB.Block.findAll({
   where: { "epoch": { [Op.not]: null, [Op.lte]: before } },
   attributes: [
     "epoch",
-    [Sequelize.fn("MIN", Sequelize.col("blockHeight")), "minBlockHeight"],
     [Sequelize.fn("MAX", Sequelize.col("blockHeight")), "maxBlockHeight"],
+    [Sequelize.fn("MIN", Sequelize.col("blockHeight")), "minBlockHeight"],
   ],
   order: [['epoch', 'DESC']],
   group: "epoch",
@@ -227,8 +227,8 @@ export const epochsAfter = ({ limit = 10, after }) => DB.Block.findAll({
   where: { "epoch": { [Op.not]: null, [Op.gte]: after } },
   attributes: [
     "epoch",
-    [Sequelize.fn("MIN", Sequelize.col("blockHeight")), "minBlockHeight"],
     [Sequelize.fn("MAX", Sequelize.col("blockHeight")), "maxBlockHeight"],
+    [Sequelize.fn("MIN", Sequelize.col("blockHeight")), "minBlockHeight"],
   ],
   order: [['epoch', 'ASC']],
   group: "epoch",
