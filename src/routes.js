@@ -25,8 +25,8 @@ export const routes = [
     if (before && after) {
       return res.status(400).send({ error: "Don't use before and after together" })
     }
-    const blocks = await Query.epochs({ limit, before, after })
-    res.status(200).send({ timestamp, blocks })
+    const epochs = await Query.epochs({ limit, before, after })
+    res.status(200).send({ timestamp, epochs })
   }],
 
   ['/total-staked',          RPC.rpcTotalStaked],
