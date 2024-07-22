@@ -38,8 +38,9 @@ export const VALIDATOR_FETCH_DETAILS_PARALLEL =
 export const BLOCK_UPDATE_INTERVAL =
   Number(process.env.BLOCK_UPDATE_INTERVAL) || 5000
 
+// Must be less than BLOCK_UPDATE_INTERVAL so that it eventually catches up
 export const EPOCH_UPDATE_INTERVAL =
-  Number(process.env.BLOCK_UPDATE_INTERVAL) || 5000
+  Number(process.env.BLOCK_UPDATE_INTERVAL) || 1000
 
 export const VALIDATOR_TRANSACTIONS = [
   "tx_become_validator.wasm",
