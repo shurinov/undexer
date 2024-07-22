@@ -162,4 +162,17 @@ export default class UndexerCommands extends Commands {
         .log(votes)
         .log(result)))
 
+  epoch = this.command({
+    name: 'epoch',
+    args: '[HEIGHT]',
+    info: 'fetch epoch for given or latest block'
+  }, (height: string) =>
+    import('./src/rpc.js')
+      .then(({ default: getRPC })=>getRPC())
+      .then(chain=>chain.fetchEpoch({
+        height: (height === undefined) ? undefined : Number(height)
+      }))
+      .then(this.log)
+      .catch(this.error))
+
 }
