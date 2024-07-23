@@ -171,7 +171,7 @@ export const blocksAfter = ({ after, limit = 15, address }) =>
   })
 
 export const block = async ({ height, hash } = {}) => {
-  const attrs = defaultAttributes(['blockHeight', 'blockHash', 'blockHeader'])
+  const attrs = defaultAttributes(['blockHeight', 'blockHash', 'blockHeader', 'epoch'])
   let block
   if (height || hash) {
     const where = {}
