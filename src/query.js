@@ -89,7 +89,7 @@ export const searchTransactions = async txHash => {
   ]
 }
 
-const BLOCK_LIST_ATTRIBUTES = [ 'blockHeight', 'blockHash', 'blockTime' ]
+const BLOCK_LIST_ATTRIBUTES = [ 'blockHeight', 'blockHash', 'blockTime', 'epoch' ]
 
 export const blocks = async ({
   before,
