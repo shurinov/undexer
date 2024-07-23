@@ -186,10 +186,9 @@ export const block = async ({ height, hash } = {}) => {
 }
 
 export const blockByHeightWithTransactions = (blockHeight = 0) => {
-  const attrs = defaultAttributes()
   const where = { blockHeight }
   return Promise.all([
-    DB.Block.findOne({ where, attributes: attrs }),
+    DB.Block.findOne({ where, attributes: defaultAttributes() }),
     DB.Transaction.findAndCountAll({ where, attributes: defaultAttributes() }),
   ])
 }
