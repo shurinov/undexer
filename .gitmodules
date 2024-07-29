@@ -2,3 +2,4 @@
   path = fadroma
   url = https://github.com/hackbg/fadroma
   branch = v2
+  shallow = true
