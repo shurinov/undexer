@@ -1,7 +1,5 @@
 #!/usr/bin/env -S node --import=@ganesha/esbuild
 
-import "dotenv/config"
-
 import { Console } from '@hackbg/fadroma'
 const console = new Console('Undexer')
 console.log('⏳ Starting at', new Date())

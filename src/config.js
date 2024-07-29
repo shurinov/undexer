@@ -1,3 +1,7 @@
+#!/usr/bin/env node
+
+import "dotenv/config"
+
 export const DEFAULT_PAGE_LIMIT = 25
 export const DEFAULT_PAGE_OFFSET = 0
 
@@ -62,3 +66,26 @@ export const GOVERNANCE_TRANSACTIONS = [
   "tx_vote_proposal.wasm",
   "tx_init_proposal.wasm"
 ]
+
+import { fileURLToPath } from 'node:url'
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  console.log('Current configuration:', {
+    DEFAULT_PAGE_LIMIT,
+    DEFAULT_PAGE_OFFSET,
+    CHAIN_ID,
+    PRE_UNDEXER_RPC_URL,
+    POST_UNDEXER_RPC_URL,
+    DATABASE_URL,
+    NODE_LOWEST_BLOCK_HEIGHT,
+    START_FROM_SCRATCH,
+    UNDEXER_API_URL,
+    VALIDATOR_UPDATE_INTERVAL,
+    PROPOSAL_UPDATE_INTERVAL,
+    VALIDATOR_FETCH_PARALLEL,
+    VALIDATOR_FETCH_DETAILS_PARALLEL,
+    BLOCK_UPDATE_INTERVAL,
+    EPOCH_UPDATE_INTERVAL,
+    VALIDATOR_TRANSACTIONS,
+    GOVERNANCE_TRANSACTIONS,
+  })
+}
