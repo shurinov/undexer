@@ -10,8 +10,21 @@ export default class UndexerCommands extends Commands {
     this.log.label = ''
   }
 
-  sync = this.command({
-    name: "sync",
+  dbStatus = this.command({
+    name: 'db status',
+    info: 'show the status of the database'
+  }, async () => {
+    const DB = await import('./src/db.js')
+    console.log('Rows in DB:')
+    console.log('Blocks:', await DB.Block.count())
+    console.log('Transactions:', await DB.Transaction.count())
+    console.log('Validators:', await DB.Validator.count())
+    console.log('Proposals:', await DB.Proposal.count())
+    console.log('Votes:', await DB.Vote.count())
+  })
+
+  dbSync = this.command({
+    name: "db sync",
     info: "create database"
   }, async () => {
     this.log.br().log('Creating database...')
@@ -20,8 +33,8 @@ export default class UndexerCommands extends Commands {
     this.log.br().log('Done.')
   })
 
-  syncForce = this.command({
-    name: "sync drop",
+  dbSyncForce = this.command({
+    name: "db sync drop",
     info: "UNSAFE: delete and re-create database with latest schema"
   }, async () => {
     this.log.br().log('Recreating database...')
@@ -30,8 +43,8 @@ export default class UndexerCommands extends Commands {
     this.log.br().log('Done.')
   })
 
-  syncAlter = this.command({
-    name: "sync alter",
+  dbSyncAlter = this.command({
+    name: "db sync alter",
     info: "UNSAFE: alter database to latest schema"
   }, async () => {
     this.log.br().log('Altering database...')
