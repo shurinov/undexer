@@ -1,19 +1,33 @@
 #!/usr/bin/env node
-import { Console, bold, colors } from '@hackbg/logs'
 import { fileURLToPath } from 'node:url'
 import { resolve, dirname } from 'node:path'
 import { readFileSync } from 'node:fs'
-const packageJsonPath = resolve(dirname(fileURLToPath(import.meta.url)), 'package.json')
-const { name, version } = JSON.parse(readFileSync(packageJsonPath))
-console.log(`⏳ Starting ${bold(name)} ${version}...`)
-import * as Dotenv from 'dotenv'
-Dotenv.config()
-const CLI = await import("./main.dist.js").catch(async e=>{
-  console.debug('⏳ Compiling TypeScript...')
-  await import("@ganesha/esbuild")
-  const t0 = performance.now()
-  const module = await import("./main.ts")
-  console.debug('⌛ Compiled TypeScript in', ((performance.now() - t0)/1000).toFixed(3)+'s')
-  return module
-}).then(module=>module.default)
-new CLI().run(process.argv.slice(2))
+const packageDir = dirname(fileURLToPath(import.meta.url))
+const packageJsonPath = resolve(packageDir, 'package.json')
+try {
+  const { Console, bold, colors } = await import('@hackbg/logs')
+  const { name, version } = JSON.parse(readFileSync(packageJsonPath))
+  console.log(`⏳ Starting ${bold(name)} ${version}...`)
+  const Dotenv = await import('dotenv')
+  Dotenv.config()
+  const CLI = await import("./main.dist.js").catch(async e=>{
+    console.debug('⏳ Compiling TypeScript...')
+    await import("@ganesha/esbuild")
+    const t0 = performance.now()
+    const module = await import("./main.ts")
+    console.debug('⌛ Compiled TypeScript in', ((performance.now() - t0)/1000).toFixed(3)+'s')
+    return module
+  }).then(module=>module.default)
+  new CLI().run(process.argv.slice(2))
+} catch (e) {
+  console.error(e)
+  if (e.code === 'ERR_MODULE_NOT_FOUND') {
+    console.info(
+      `\nℹ️A "module not found" error signifies a missing dependency.` +
+      `\nTry reinstalling node_modules, making sure you are using PNPM (https://pnpm.io/).` +
+      `\nWays to obtain PNPM include "corepack enable" or "npm i -g pnpm".` +
+      `\nIf reinstalling doesn't help, get in touch at https://github.com/hackbg/undexer/issues`
+    )
+  }
+  process.exit(1)
+}
