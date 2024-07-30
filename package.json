@@ -11,7 +11,8 @@
   "scripts": {
     "start": "concurrently --raw bin/api.js bin/index.js",
     "cli": "node undexer",
-    "build:rust": "cd rust && wasm-pack build --dev --target nodejs"
+    "build:wasm:dev": "cd fadroma/packages/namada && pnpm build:wasm:dev",
+    "build:wasm:prod": "cd fadroma/packages/namada && pnpm build:wasm:prod"
   },
   "dependencies": {
     "@fadroma/namada": "workspace:./fadroma/packages/namada",

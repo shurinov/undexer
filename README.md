@@ -7,7 +7,7 @@ Undexer is the pilot project for [Fadroma 2.0](https://github.com/hackbg/fadroma
 See [`@fadroma/namada`](https://github.com/hackbg/fadroma/tree/v2/packages/namada)
 and [`@hackbg/borshest`](https://github.com/hackbg/toolbox/tree/main/borshest).
 
-## API Reference and Endpoints
+## API reference and endpoints
 
 ### API v2 (current):  https://undexer.demo.hack.bg/v2/
 
@@ -15,21 +15,56 @@ For all endpoints available please refer to the [OpenAPI specs](swagger.yaml).
 
 ### API v1 (deprecated): https://namada.undexer.demo.hack.bg/
 
-## Development guidelines
+## Running locally (without Docker)
 
-The quickest way to deploy the whole stack locally
-(PostgreSQL, PGAdmin, indexer, and API):
+Requires:
 
-```bash
-docker compose up -d
-docker compose logs -f
+* Git
+* Node.js (tested with 22.3.0)
+* PNPM (tested with 9.4.0)
+* Rust (tested with 1.79.0)
+* wasm-pack (tested with 0.12.1)
+
+Setup:
+
+```sh
+git clone --recursive https://github.com/hackbg/undexer
+cd undexer
+pnpm i
+pnpm build:wasm:dev # or pnpm build:wasm:prod
+pnpm start # run api and indexer
 ```
 
-By default, the API server will listen on `http://localhost:8888`.
+* By default, the API server will listen on `http://localhost:8888`.
+  You can set `SERVER_PORT` to listen on another port.
 
-> **Note:** You can set `SERVER_PORT` to listen on another port.
+* You can create a `.env` file to provide configuration.
 
-> **Note:** `.env` files are supported.
+## Running locally (with Docker)
+
+Requires:
+
+* Git
+* Node.js (tested with 22.3.0)
+* PNPM (**optional but recommended**; tested with 9.4.0)
+* Rust (tested with 1.79.0)
+* wasm-pack (tested with 0.12.1)
+* Docker (tested with 24.0.9)
+* Docker Compose (tested with 2.28.1, should come built-in to Docker)
+* [Just](https://github.com/casey/just) (**optional but recommended**; tested with 1.29.1)
+
+Setup:
+
+```sh
+git clone --recursive https://github.com/hackbg/undexer
+cd undexer
+npm run build:wasm:dev
+just up # or `docker compose up`, etc.
+```
+
+* [ ] **TODO:** Build WASM in container, so that Rust WASM toolchain is not required on host
+
+## Next steps
 
 To just launch PostgreSQL and PGAdmin services in Docker, and
 work on indexer/API locally (outside of container):
