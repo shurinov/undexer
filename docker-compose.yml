@@ -7,15 +7,16 @@ services:
     user: "root"
     network_mode: host
     image: oci.hack.bg/undexer:main
+    build: { context: ., network: host }
     environment: { CI: 1 }
     entrypoint: /bin/sh
     command: >
-      -c "corepack enable||exit 1; for d in /src/undexer /src/undexer/fadroma; do
+      -c "for d in /src/undexer /src/undexer/fadroma; do
         cd $$d
         pwd
         chown -R node node_modules
         su node -c 'pnpm i'
-      done"
+      done && cd /src/undexer && pnpm build:wasm:dev"
     volumes: # Volume order is important:
       - deps:/app/.pnpm-store # First the volumes...
       - deps-undexer:/src/undexer/node_modules
@@ -27,7 +28,7 @@ services:
     network_mode: host
     restart: unless-stopped
     image: oci.hack.bg/undexer:main
-    build: { context: ./undexer, network: host }
+    build: { context: ., network: host }
     entrypoint: /app/undexer
     command: api
     volumes:
@@ -50,7 +51,7 @@ services:
     network_mode: host
     restart: unless-stopped
     image: oci.hack.bg/undexer:main
-    build: { context: ./undexer, network: host }
+    build: { context: ., network: host }
     entrypoint: /app/undexer
     command: index
     volumes:
