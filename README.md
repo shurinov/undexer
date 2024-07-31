@@ -24,6 +24,7 @@ Requires:
 * PNPM (tested with 9.4.0)
 * Rust (tested with 1.79.0)
 * wasm-pack (tested with 0.12.1)
+* protoc (tested with 25.3)
 
 Setup:
 
@@ -45,10 +46,6 @@ pnpm start # run api and indexer
 Requires:
 
 * Git
-* Node.js (tested with 22.3.0)
-* PNPM (**optional but recommended**; tested with 9.4.0)
-* Rust (tested with 1.79.0)
-* wasm-pack (tested with 0.12.1)
 * Docker (tested with 24.0.9)
 * Docker Compose (tested with 2.28.1, should come built-in to Docker)
 * [Just](https://github.com/casey/just) (**optional but recommended**; tested with 1.29.1)
