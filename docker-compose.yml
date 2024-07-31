@@ -16,7 +16,7 @@ services:
         pwd
         chown -R node node_modules
         su node -c 'pnpm i'
-      done && cd /src/undexer && pnpm build:wasm:dev"
+      done"
     volumes: # Volume order is important:
       - deps:/app/.pnpm-store # First the volumes...
       - deps-undexer:/src/undexer/node_modules
