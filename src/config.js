@@ -14,7 +14,7 @@ export const PRE_UNDEXER_RPC_URL =
   //process.env.PRE_UNDEXER_RPC_URL || "http://51.159.167.32:26657/";
 
 export const POST_UNDEXER_RPC_URL =
-  process.env.POST_UNDEXER_RPC_URL || PRE_INDEXER_RPC_URL;
+  process.env.POST_UNDEXER_RPC_URL || PRE_UNDEXER_RPC_URL;
 
 export const DATABASE_URL =
   process.env.DATABASE_URL || 'postgres://postgres:insecure@localhost:5432'
