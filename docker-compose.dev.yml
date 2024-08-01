@@ -1,3 +1,4 @@
+#!/usr/bin/env -S docker compose -f
 services:
 
   # Since this project is a PNPM workspace, but the

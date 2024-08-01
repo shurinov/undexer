@@ -1,3 +1,4 @@
+#!/usr/bin/env -S docker compose -f
 services:
   api:
     network_mode: host
