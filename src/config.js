@@ -5,20 +5,23 @@ import "dotenv/config"
 export const DEFAULT_PAGE_LIMIT = 25
 export const DEFAULT_PAGE_OFFSET = 0
 
-export const CHAIN_ID =
-  process.env.CHAIN_ID || 'housefire-envelope.b8f955720ab'
-
-export const PRE_UNDEXER_RPC_URL =
-  process.env.PRE_UNDEXER_RPC_URL || 'https://rpc.knowable.run/'
-
-export const POST_UNDEXER_RPC_URL =
-  process.env.POST_UNDEXER_RPC_URL || PRE_UNDEXER_RPC_URL;
-
 export const DATABASE_URL =
   process.env.DATABASE_URL || 'postgres://postgres:insecure@localhost:5432'
 
+export const CHAIN_ID =
+  process.env.CHAIN_ID || 'housefire-envelope.b8f955720ab'
+
+export const RPC_URL =
+  process.env.RPC_URL || 'https://rpc.knowable.run/';
+
 export const NODE_LOWEST_BLOCK_HEIGHT =
   process.env.NODE_LOWEST_BLOCK_HEIGHT ?? 0; //237907;
+
+export const PRE_UNDEXER_RPC_URL =
+  process.env.PRE_UNDEXER_RPC_URL || RPC_URL;
+
+export const POST_UNDEXER_RPC_URL =
+  process.env.POST_UNDEXER_RPC_URL || RPC_URL;
 
 export const START_FROM_SCRATCH =
   process.env.START_FROM_SCRATCH || false;
