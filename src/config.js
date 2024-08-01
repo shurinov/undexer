@@ -10,8 +10,6 @@ export const CHAIN_ID =
 
 export const PRE_UNDEXER_RPC_URL =
   process.env.PRE_UNDEXER_RPC_URL || 'https://rpc.knowable.run/'
-  //process.env.PRE_UNDEXER_RPC_URL || "https://rpc.namada.tududes.com/" || "http://51.159.167.32:26657/";
-  //process.env.PRE_UNDEXER_RPC_URL || "http://51.159.167.32:26657/";
 
 export const POST_UNDEXER_RPC_URL =
   process.env.POST_UNDEXER_RPC_URL || PRE_UNDEXER_RPC_URL;
