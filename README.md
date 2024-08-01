@@ -58,7 +58,6 @@ Setup:
 ```sh
 git clone --recursive https://github.com/hackbg/undexer
 cd undexer
-npm run build:wasm:dev
 just up # or `docker compose up`, etc.
 ```
 
