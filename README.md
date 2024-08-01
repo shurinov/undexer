@@ -15,7 +15,9 @@ For all endpoints available please refer to the [OpenAPI specs](swagger.yaml).
 
 ### API v1 (deprecated): https://namada.undexer.demo.hack.bg/
 
-## Running locally (without Docker)
+## Running
+
+### Dockerless staging deployment
 
 Requires:
 
@@ -25,6 +27,7 @@ Requires:
 * Rust (tested with 1.79.0)
 * wasm-pack (tested with 0.12.1)
 * protoc (tested with 25.3)
+* PostgreSQL (tested wit 16.2)
 
 Setup:
 
@@ -33,15 +36,15 @@ git clone --recursive https://github.com/hackbg/undexer
 cd undexer
 pnpm i
 pnpm build:wasm:dev # or pnpm build:wasm:prod
-pnpm start # run api and indexer
+pnpm start # concurrently runs api and indexer
 ```
 
-* By default, the API server will listen on `http://localhost:8888`.
-  You can set `SERVER_PORT` to listen on another port.
+* You may need to create an `.env` file to provide at least `DATABASE_URL` (for connecting
+  to your PostgreSQL instance). See `src/config.js` for other environment variables.
 
-* You can create a `.env` file to provide configuration.
+* You can use Docker Compose to launch Postgres and hack on the rest outside of the container.
 
-## Running locally (with Docker)
+### Dockerized staging deployment
 
 Requires:
 
@@ -59,31 +62,16 @@ npm run build:wasm:dev
 just up # or `docker compose up`, etc.
 ```
 
-* [ ] **TODO:** Build WASM in container, so that Rust WASM toolchain is not required on host
+### Production deployment
 
-## Next steps
+* We use NixOS/systemd/Docker to run this in production.
 
-To just launch PostgreSQL and PGAdmin services in Docker, and
-work on indexer/API locally (outside of container):
+* Undexer does not manage TLS certificates or terminate HTTPS.
+  We use NGINX and automatic ACME/LetsEncrypt cert management provided by NixOS.
 
-```bash
-docker compose up -d postgres pgadmin
-npm start
-```
+## Troubleshooting
 
-This launches the `api` and `indexer` services using [`concurrently`](https://www.npmjs.com/package/concurrently),
-and listens on `http://localhost:8888`.
-
-### Compiling the WASM modules
-
-The indexer service depends the WASM blob provided by `@fadroma/namada`.
-It lives in `./fadroma/packages/namada/fadroma_namada_bg.wasm`.
-It's a binary artifact, so it's not included in the Git repo.
-To generate it:
-
-```bash
-cd fadroma/packages/namada && npm run build:wasm:dev
-```
+### The submodule
 
 `./fadroma` is a Git submodule. Handle accordingly. For example, if the directory is empty,
 this usually means you cloned the Undexer repo without submodules. To populate it, use:
@@ -92,13 +80,6 @@ this usually means you cloned the Undexer repo without submodules. To populate i
 git submodule update --init --recursive
 ```
 
-### Troubleshooting
+### Others
 
-If you catch anything breaking, debug accordingly
-and/or file an issue/PR in this repository.
-
-### Production deployment
-
-Undexer does not manage TLS certificates or terminate HTTPS.
-In production, it's recommended to run behind NGINX with ACME/LetsEncrypt
-or your own certificates.
+If you catch anything breaking, get in touch by filing an issue or PR in this repository.
