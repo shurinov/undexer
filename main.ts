@@ -162,7 +162,18 @@ export default class UndexerCommands extends Commands {
     console.log({parameters})
   })
 
-  proposal = this.command({
+  proposalCount = this.command({
+    name: 'proposal count',
+    args: 'ID',
+    info: 'fetch count of proposals from chain'
+  }, (id: string) =>
+    import('./src/rpc.js')
+      .then(({ default: getRPC })=>getRPC())
+      .then(chain=>chain.fetchProposalCount())
+      .then((count)=>this.log
+        .log('Proposals on chain:', count)))
+
+  proposalFetch = this.command({
     name: 'proposal fetch',
     args: 'ID',
     info: 'fetch proposal from chain'
@@ -170,10 +181,13 @@ export default class UndexerCommands extends Commands {
     import('./src/rpc.js')
       .then(({ default: getRPC })=>getRPC())
       .then(chain=>chain.fetchProposalInfo(id))
-      .then(({ id, proposal, votes, result })=>this.log
-        .log(proposal)
-        .log(votes)
-        .log(result)))
+      .then(data=>data
+        ? this.log
+          .log(data.proposal)
+          .log(data.votes)
+          .log(data.result)
+        : this.log
+          .error(`Proporsal ${id} not found.`)))
 
   epoch = this.command({
     name: 'epoch',
