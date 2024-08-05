@@ -275,7 +275,7 @@ export const validatorsTop = ({ limit = 15 } = {}) =>
   })
 
 export const validatorPublicKeyToConsensusAddress = (publicKey = '') => DB.Validator.findOne({
-  attributes: { include: [ 'address' ] },
+  attributes: { include: [ 'address', 'consensusAddresses' ] },
   where: { publicKey }
 }).then(validator=>validator.address)
 

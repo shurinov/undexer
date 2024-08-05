@@ -9,8 +9,8 @@ import { retryForever } from "./utils.js";
 import db, { withErrorLog, Validator } from './db.js'
 
 import {
-  VALIDATOR_FETCH_PARALLEL,
-  VALIDATOR_FETCH_DETAILS_PARALLEL
+  VALIDATOR_TENDERMINT_METADATA_PARALLEL,
+  VALIDATOR_NAMADA_METADATA_PARALLEL,
 } from './config.js';
 
 export async function tryUpdateValidators (chain, height) {
@@ -25,8 +25,8 @@ export async function tryUpdateValidators (chain, height) {
 export async function updateValidators (chain, height) {
   console.log("=> Updating validators");
   const validators = Object.values(await chain.fetchValidators({
-    parallel:        VALIDATOR_FETCH_PARALLEL,
-    parallelDetails: VALIDATOR_FETCH_DETAILS_PARALLEL,
+    tendermintMetadata: VALIDATOR_TENDERMINT_METADATA_PARALLEL ? 'parallel' : true,
+    namadaMetadata:     VALIDATOR_NAMADA_METADATA_PARALLEL     ? 'parallel' : true,
   }))
   await withErrorLog(() => db.transaction(async dbTransaction => {
     await Validator.destroy({ where: {} }, { transaction: dbTransaction });

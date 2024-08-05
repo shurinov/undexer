@@ -22,7 +22,7 @@ try {
     `CREATE COLLATION IF NOT EXISTS numeric (provider = icu, locale = 'en-u-kn-true')`
   )
 } catch (e) {
-  console.warn('FIXME: CREATE COLLATION threw.')
+  console.warn('FIXME: CREATE COLLATION threw. This is normal only after first run.')
 }
 
 export default db
@@ -103,15 +103,16 @@ export const
   }),
 
   Validator = db.define('validator', {
-    publicKey:        StringPrimaryKey(),
-    address:          { type: TEXT, allowNull: true },
-    namadaAddress:    { type: TEXT, allowNull: true },
-    votingPower:      { type: TEXT, allowNull: true },
-    proposerPriority: { type: TEXT, allowNull: true },
-    metadata:         NullableJSONField('metadata'),
-    commission:       NullableJSONField('commission'),
-    stake:            { type: TEXT, allowNull: true },
-    state:            NullableJSONField('state')
+    publicKey:          StringPrimaryKey(),
+    address:            { type: TEXT, allowNull: true },
+    namadaAddress:      { type: TEXT, allowNull: true },
+    consensusAddresses: NullableJSONField('consensusAddresses'),
+    votingPower:        { type: TEXT, allowNull: true },
+    proposerPriority:   { type: TEXT, allowNull: true },
+    metadata:           NullableJSONField('metadata'),
+    commission:         NullableJSONField('commission'),
+    stake:              { type: TEXT, allowNull: true },
+    state:              NullableJSONField('state')
   }),
 
   Block = db.define('block', {
