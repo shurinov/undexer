@@ -5,11 +5,11 @@ import "dotenv/config"
 export const DEFAULT_PAGE_LIMIT = 25
 export const DEFAULT_PAGE_OFFSET = 0
 
-export const DATABASE_URL =
-  process.env.DATABASE_URL || 'postgres://postgres:insecure@localhost:5432/public'
-
 export const CHAIN_ID =
   process.env.CHAIN_ID || 'housefire-envelope.b8f955720ab'
+
+export const DATABASE_URL =
+  process.env.DATABASE_URL || `postgres://postgres:insecure@localhost:5432/${CHAIN_ID}`
 
 export const RPC_URL =
   process.env.RPC_URL || 'https://rpc.knowable.run/';

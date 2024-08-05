@@ -27,8 +27,8 @@ export default class UndexerCommands extends Commands {
     name: "db sync",
     info: "create database"
   }, async () => {
-    this.log.br().log('Creating database...')
     const { default: db } = await import('./src/db.js')
+    this.log.br().log('Trying to sync database schema...')
     await db.sync()
     this.log.br().log('Done.')
   })
@@ -37,8 +37,8 @@ export default class UndexerCommands extends Commands {
     name: "db sync drop",
     info: "UNSAFE: delete and re-create database with latest schema"
   }, async () => {
-    this.log.br().log('Recreating database...')
     const { default: db } = await import('./src/db.js')
+    this.log.br().log('Trying to force-sync database schema...')
     await db.sync({ force: true })
     this.log.br().log('Done.')
   })
@@ -47,8 +47,8 @@ export default class UndexerCommands extends Commands {
     name: "db sync alter",
     info: "UNSAFE: alter database to latest schema"
   }, async () => {
-    this.log.br().log('Altering database...')
     const { default: db } = await import('./src/db.js')
+    this.log.br().log('Trying to alter database schema...')
     await db.sync({ alter: true })
     this.log.br().log('Done.')
   })

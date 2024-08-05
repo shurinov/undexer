@@ -18,7 +18,8 @@ try {
     console.debug('⌛ Compiled TypeScript in', ((performance.now() - t0)/1000).toFixed(3)+'s')
     return module
   }).then(module=>module.default)
-  new CLI().run(process.argv.slice(2))
+  await Promise.resolve(new CLI().run(process.argv.slice(2)))
+  process.exit(0)
 } catch (e) {
   console.error(e)
   if (e.code === 'ERR_MODULE_NOT_FOUND') {
