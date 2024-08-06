@@ -23,23 +23,42 @@ export async function tryUpdateValidators (chain, height) {
 }
 
 export async function updateValidators (chain, height) {
-  console.log("=> Updating validators");
-  const validators = Object.values(await chain.fetchValidators({
-    tendermintMetadata: VALIDATOR_TENDERMINT_METADATA_PARALLEL ? 'parallel' : true,
-    namadaMetadata:     VALIDATOR_NAMADA_METADATA_PARALLEL     ? 'parallel' : true,
-  }))
-  await withErrorLog(() => db.transaction(async dbTransaction => {
-    await Validator.destroy({ where: {} }, { transaction: dbTransaction });
-    for (const validatorData of validators) {
-      //console.log(validatorData)
-      await Validator.create(validatorData, { transaction: dbTransaction });
+  console.log("=> Updating validators")
+  let count   = 0
+  let added   = 0
+  let updated = 0
+  for await (const validator of chain.fetchValidatorsIter({
+    parallel: true
+  })) {
+    const existing = await Validator.findOne({
+      where: { namadaAddress: validator.namadaAddress }
+    })
+    if (existing) {
+      console.log('Updating validator', validator.namadaAddress)
+      existing.publicKey = validator.publicKey
+      existing.pastPublicKeys = [...new Set([
+        ...existing.pastPublicKeys||[],
+        validator.publicKey
+      ])]
+      existing.consensusAddress = validator.consensusAddress
+      existing.pastConsensusAddresses = [...new Set([
+        ...existing.pastConsensusAddresses||[],
+        validator.consensusAddress
+      ])]
+      existing.votingPower = validator.votingPower
+      existing.proposerPriority = validator.proposerPriority
+      existing.metadata = validator.metadata
+      existing.commission = validator.commission
+      existing.stake = validator.stake
+      existing.state = validator.state
+      await existing.save()
+      updated++
+    } else {
+      console.log('Adding validator', validator.namadaAddress)
+      await Validator.create(validator)
+      added++
     }
-  }), {
-    update: 'validators',
-    height
-  })
-  console.log(
-    'Updated to', Object.keys(validators).length, 'validators'
-  )
-  return validators
+    count++
+  }
+  console.log(`=> ${count} validators (added ${added}, updated ${updated})`)
 }

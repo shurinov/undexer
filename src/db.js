@@ -26,7 +26,11 @@ try {
   if (e.code === '42P04') {
     console.info(`Database "${CHAIN_ID}" exists.`)
   } else {
-    console.error(e)
+    if (e.code === 'ECONNREFUSED') {
+      console.error(`Connection refused. Make sure Postgres is running at ${e.address}:${e.port}`)
+    } else {
+      console.error(e)
+    }
     console.error(`Failed to create database "${CHAIN_ID}". See above for details.`)
     process.exit(1)
   }
@@ -114,21 +118,22 @@ export const
     id:        IntegerPrimaryKey(true),
     timestamp: { type: DATE },
     message:   { type: TEXT },
-    stack:     { type: JSONB },
-    info:      { type: JSONB, allowNull: true },
+    stack:     JSONField('stack'),
+    info:      NullableJSONField('info'),
   }),
 
   Validator = db.define('validator', {
-    publicKey:          StringPrimaryKey(),
-    address:            { type: TEXT, allowNull: true },
-    namadaAddress:      { type: TEXT, allowNull: true },
-    consensusAddresses: NullableJSONField('consensusAddresses'),
-    votingPower:        { type: TEXT, allowNull: true },
-    proposerPriority:   { type: TEXT, allowNull: true },
-    metadata:           NullableJSONField('metadata'),
-    commission:         NullableJSONField('commission'),
-    stake:              { type: TEXT, allowNull: true },
-    state:              NullableJSONField('state')
+    namadaAddress:          StringPrimaryKey(),
+    publicKey:              { type: TEXT, allowNull: true },
+    pastPublicKeys:         NullableJSONField('pastPublicKeys'),
+    consensusAddress:       { type: TEXT, allowNull: true },
+    pastConsensusAddresses: NullableJSONField('pastConsensusAddresses'),
+    votingPower:            { type: TEXT, allowNull: true },
+    proposerPriority:       { type: TEXT, allowNull: true },
+    metadata:               NullableJSONField('metadata'),
+    commission:             NullableJSONField('commission'),
+    stake:                  { type: TEXT, allowNull: true },
+    state:                  NullableJSONField('state')
   }),
 
   Block = db.define('block', {

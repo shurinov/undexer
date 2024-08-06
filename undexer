@@ -19,7 +19,6 @@ try {
     return module
   }).then(module=>module.default)
   await Promise.resolve(new CLI().run(process.argv.slice(2)))
-  process.exit(0)
 } catch (e) {
   console.error(e)
   if (e.code === 'ERR_MODULE_NOT_FOUND') {
