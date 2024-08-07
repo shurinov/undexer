@@ -34,17 +34,17 @@ export async function updateValidators (chain, height) {
       where: { namadaAddress: validator.namadaAddress }
     })
     if (existing) {
-      console.log('Updating validator', validator.namadaAddress)
+      console.log('Updating validator', validator)
       existing.publicKey = validator.publicKey
       existing.pastPublicKeys = [...new Set([
         ...existing.pastPublicKeys||[],
         validator.publicKey
-      ])]
-      existing.consensusAddress = validator.consensusAddress
+      ].filter(Boolean))]
+      existing.consensusAddress = validator.address
       existing.pastConsensusAddresses = [...new Set([
         ...existing.pastConsensusAddresses||[],
-        validator.consensusAddress
-      ])]
+        validator.address
+      ].filter(Boolean))]
       existing.votingPower = validator.votingPower
       existing.proposerPriority = validator.proposerPriority
       existing.metadata = validator.metadata
