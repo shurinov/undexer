@@ -60,24 +60,25 @@ export const routes = [
 
   ['/block', async function dbBlock (req, res) {
     const timestamp = new Date().toISOString()
-    const attrs = Query.defaultAttributes(['blockHeight', 'blockHash', 'blockHeader'])
+    const attrs = Query.defaultAttributes(['blockHeight', 'blockHash', 'blockHeader', 'blockData'])
     const { height, hash } = req.query
     const block = await Query.block({ height, hash })
     if (!block) {
       return res.status(404).send({ error: 'Block not found' })
     }
     const transactions = await Query.transactionsAtHeight(block.blockHeight)
+    const signers = block.blockData.result.block.last_commit.signatures.map(s=>s.validator_address)
     return res.status(200).send({
       timestamp,
       chainId,
       blockHeight:      block.blockHeight,
       blockHash:        block.blockHash,
-      blockHeader:      block.blockHeader,
       blockTime:        block.blockTime,
       epoch:            block.epoch,
-      signatures:       block.signatures,
       transactionCount: transactions.count,
       transactions:     transactions.rows.map(row => row.toJSON()),
+      proposer:         block.blockHeader.proposerAddress,
+      signers,
     })
   }],
 
