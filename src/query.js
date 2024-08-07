@@ -268,7 +268,12 @@ export const transactionsAtHeight = (blockHeight = 0) =>
 
 export const validatorByConsensusAddress = consensusAddress =>
   DB.Validator.findOne({
-    attributes: [ 'namadaAddress', 'publicKey', 'consensusAddress' ],
+    attributes: [
+      'namadaAddress',
+      'publicKey',
+      'consensusAddress',
+      'metadata'
+    ],
     where: {
       [Op.or]: [
         { consensusAddress },
