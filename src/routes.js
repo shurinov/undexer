@@ -77,8 +77,13 @@ export const routes = [
       epoch:            block.epoch,
       transactionCount: transactions.count,
       transactions:     transactions.rows.map(row => row.toJSON()),
-      proposer:         block.blockHeader.proposerAddress,
-      signers,
+
+      proposer: await Query.validatorByConsensusAddress(
+        block.blockHeader.proposerAddress
+      ),
+      signers:  await Promise.all(signers.filter(Boolean).map(
+        signer=>Query.validatorByConsensusAddress(signer)
+      )),
     })
   }],
 

@@ -266,6 +266,17 @@ export const transactionsLatest = ({ limit = 15 } = {}) =>
 export const transactionsAtHeight = (blockHeight = 0) =>
   DB.Transaction.findAndCountAll({ where: { blockHeight } })
 
+export const validatorByConsensusAddress = consensusAddress =>
+  DB.Validator.findOne({
+    attributes: [ 'namadaAddress', 'publicKey', 'consensusAddress' ],
+    where: {
+      [Op.or]: [
+        { consensusAddress },
+        { pastConsensusAddresses: { [Op.contains]: [consensusAddress] } }
+      ]
+    }
+  })
+
 export const validatorsTop = ({ limit = 15 } = {}) =>
   DB.Validator.findAll({
     attributes: defaultAttributes(),
