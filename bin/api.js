@@ -7,7 +7,7 @@ import cors from 'cors';
 app.use(cors()); // CORS enabled for all origins
 
 import router from '../src/routes.js';
-app.use('/v2', router);
+app.use('/v3', router);
 import sequelize from '../src/db.js';
 
 console.log('⏳ Syncing DB schema...')
