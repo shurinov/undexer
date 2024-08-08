@@ -64,6 +64,10 @@ export async function updateBlock ({
       blockData:    JSON.parse(block.responses?.block.response||"null"),
       blockResults: JSON.parse(block.responses?.results.response||"null"),
       rpcResponses: block.responses,
+      epoch:        await chain.fetchEpoch({ height: block.height }).catch(()=>{
+        console.warn('Could not fetch epoch for block', block.height, '- will retry later')
+        return undefined
+      }),
     }
     await DB.Block.create(data, { transaction: dbTransaction });
     for (const transaction of block.transactions) {
