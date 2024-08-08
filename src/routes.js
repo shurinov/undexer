@@ -131,8 +131,12 @@ export const routes = [
     if (validator === null) return res.status(404).send({ error: 'Validator not found' });
     validator = { ...validator.get() }
     validator.metadata ??= {}
+    const consensusAddresses = new Set([
+      validator.consensusAddress,
+      ...validator.pastConsensusAddresses||[]
+    ])
     let uptime, lastSignedBlocks = [], currentHeight, countedBlocks
-    if (validator.address && ('uptime' in req.query)) {
+    if ('uptime' in req.query) {
       // Count number of times the validator's consensus address is encountered
       // in the set of all signatures belonging to the past 100 blocks.
       // This powers the uptime blocks visualization in the validator detail page.
@@ -148,7 +152,7 @@ export const routes = [
       } of latestBlocks) {
         let present = false
         for (const { validator_address } of blockData.result.block.last_commit.signatures) {
-          if (validator_address === validator.address) {
+          if (consensusAddresses.has(validator_address)) {
             present = true
             break
           }
