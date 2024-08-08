@@ -5,14 +5,15 @@ import "dotenv/config"
 export const DEFAULT_PAGE_LIMIT = 25
 export const DEFAULT_PAGE_OFFSET = 0
 
-export const DATABASE_URL =
-  process.env.DATABASE_URL || 'postgres://postgres:insecure@localhost:5432/public'
-
 export const CHAIN_ID =
   process.env.CHAIN_ID || 'housefire-envelope.b8f955720ab'
 
+export const DATABASE_URL =
+  process.env.DATABASE_URL || `postgres://postgres:insecure@localhost:5432/${CHAIN_ID}`
+
 export const RPC_URL =
-  process.env.RPC_URL || 'https://rpc.knowable.run/';
+  process.env.RPC_URL || 'https://rpc.housefire.tududes.com/';
+  //process.env.RPC_URL || 'https://rpc.knowable.run/';
 
 export const NODE_LOWEST_BLOCK_HEIGHT =
   process.env.NODE_LOWEST_BLOCK_HEIGHT ?? 0; //237907;
@@ -30,16 +31,16 @@ export const UNDEXER_API_URL =
   process.env.UNDEXER_API_URL || "http://v2.namada.undexer.demo.hack.bg";
 
 export const VALIDATOR_UPDATE_INTERVAL =
-  Number(process.env.VALIDATOR_UPDATE_INTERVAL) || 30000
+  Number(process.env.VALIDATOR_UPDATE_INTERVAL) || 10000
 
 export const PROPOSAL_UPDATE_INTERVAL =
   Number(process.env.PROPOSAL_UPDATE_INTERVAL) || 30000
 
-export const VALIDATOR_FETCH_PARALLEL =
-  Boolean(process.env.VALIDATOR_FETCH_PARALLEL) || false
+export const VALIDATOR_TENDERMINT_METADATA_PARALLEL =
+  Boolean(process.env.VALIDATOR_TENDERMINT_METADATA_PARALLEL) || true
 
-export const VALIDATOR_FETCH_DETAILS_PARALLEL =
-  Boolean(process.env.VALIDATOR_FETCH_DETAILS_PARALLEL) || false
+export const VALIDATOR_NAMADA_METADATA_PARALLEL =
+  Boolean(process.env.VALIDATOR_NAMADA_METADATA_PARALLEL) || true
 
 export const BLOCK_UPDATE_INTERVAL =
   Number(process.env.BLOCK_UPDATE_INTERVAL) || 5000

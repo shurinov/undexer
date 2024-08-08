@@ -1,6 +1,7 @@
 import { Console } from "@hackbg/logs"
 import { Sequelize, DataTypes, Op } from "sequelize"
-import { DATABASE_URL } from "./config.js"
+import PG from "pg"
+import { CHAIN_ID, DATABASE_URL } from "./config.js"
 
 export { Sequelize, DataTypes, Op }
 
@@ -15,14 +16,33 @@ const db = new Sequelize(DATABASE_URL, {
   supportBigNumbers: true,
 })
 
+try {
+  console.br().log(`Creating database "${CHAIN_ID}"...`)
+  const { username, password, hostname, port } = new URL(DATABASE_URL)
+  const pg = new PG.Client({ user: username, password, host: hostname, port })
+  await pg.connect()
+  await pg.query(`CREATE DATABASE "${CHAIN_ID}"`)
+} catch (e) {
+  if (e.code === '42P04') {
+    console.info(`Database "${CHAIN_ID}" exists.`)
+  } else {
+    if (e.code === 'ECONNREFUSED') {
+      console.error(`Connection refused. Make sure Postgres is running at ${e.address}:${e.port}`)
+    } else {
+      console.error(e)
+    }
+    console.error(`Failed to create database "${CHAIN_ID}". See above for details.`)
+    process.exit(1)
+  }
+}
+
 // Allow sorting strings as numbers.
 // See https://github.com/sequelize/sequelize/discussions/15529#discussioncomment-4601186
 try {
-  await db.query(
-    `CREATE COLLATION IF NOT EXISTS numeric (provider = icu, locale = 'en-u-kn-true')`
-  )
+  await db.query(`CREATE COLLATION IF NOT EXISTS numeric (provider = icu, locale = 'en-u-kn-true')`)
 } catch (e) {
-  console.warn('FIXME: CREATE COLLATION threw.')
+  console.error(e)
+  console.warn('FIXME: CREATE COLLATION threw. This is normal only after first run.')
 }
 
 export default db
@@ -98,20 +118,22 @@ export const
     id:        IntegerPrimaryKey(true),
     timestamp: { type: DATE },
     message:   { type: TEXT },
-    stack:     { type: JSONB },
-    info:      { type: JSONB, allowNull: true },
+    stack:     JSONField('stack'),
+    info:      NullableJSONField('info'),
   }),
 
   Validator = db.define('validator', {
-    publicKey:        StringPrimaryKey(),
-    address:          { type: TEXT, allowNull: true },
-    namadaAddress:    { type: TEXT, allowNull: true },
-    votingPower:      { type: TEXT, allowNull: true },
-    proposerPriority: { type: TEXT, allowNull: true },
-    metadata:         NullableJSONField('metadata'),
-    commission:       NullableJSONField('commission'),
-    stake:            { type: TEXT, allowNull: true },
-    state:            NullableJSONField('state')
+    namadaAddress:          StringPrimaryKey(),
+    publicKey:              { type: TEXT, allowNull: true },
+    pastPublicKeys:         NullableJSONField('pastPublicKeys'),
+    consensusAddress:       { type: TEXT, allowNull: true },
+    pastConsensusAddresses: NullableJSONField('pastConsensusAddresses'),
+    votingPower:            { type: TEXT, allowNull: true },
+    proposerPriority:       { type: TEXT, allowNull: true },
+    metadata:               NullableJSONField('metadata'),
+    commission:             NullableJSONField('commission'),
+    stake:                  { type: TEXT, allowNull: true },
+    state:                  NullableJSONField('state')
   }),
 
   Block = db.define('block', {

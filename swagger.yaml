@@ -9,8 +9,8 @@ info:
     url: "https://github.com/hackbg/undexer"
 
 servers:
-  - url: "https://undexer.demo.hack.bg/v2/"
-  - url: /v2/
+  - url: "https://undexer-v3.demo.hack.bg/v3/"
+  - url: /v3/
 
 paths:
 
@@ -303,9 +303,40 @@ components:
       properties:
         blockHeight:                                {type: integer}
         blockHash:                                  {type: string}
-        blockHeader:                                {type: string}
         blockTime:                                  {type: string, format: date-time}
         transactionCount:                           {type: integer}
+        proposer:
+          type:                                     object
+          properties:
+            namadaAddress:                          {type: string}
+            publicKey:                              {type: string}
+            consensusAddress:                       {type: string}
+            metadata:
+              type:                                 object
+              properties:
+                name:                               {type: string}
+                email:                              {type: string}
+                avatar:                             {type: string}
+                website:                            {type: string}
+                description:                        {type: string}
+                discordHandle:                      {type: string}
+        signers:
+          type:                                     array
+          items:
+            type:                                   object
+            properties:
+              namadaAddress:                        {type: string}
+              publicKey:                            {type: string}
+              consensusAddress:                     {type: string}
+              metadata:
+                type:                               object
+                properties:
+                  name:                             {type: string}
+                  email:                            {type: string}
+                  avatar:                           {type: string}
+                  website:                          {type: string}
+                  description:                      {type: string}
+                  discordHandle:                    {type: string}
         transactions:
           type:                                     array
           items:

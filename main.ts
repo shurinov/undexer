@@ -27,8 +27,8 @@ export default class UndexerCommands extends Commands {
     name: "db sync",
     info: "create database"
   }, async () => {
-    this.log.br().log('Creating database...')
     const { default: db } = await import('./src/db.js')
+    this.log.br().log('Trying to sync database schema...')
     await db.sync()
     this.log.br().log('Done.')
   })
@@ -37,8 +37,8 @@ export default class UndexerCommands extends Commands {
     name: "db sync drop",
     info: "UNSAFE: delete and re-create database with latest schema"
   }, async () => {
-    this.log.br().log('Recreating database...')
     const { default: db } = await import('./src/db.js')
+    this.log.br().log('Trying to force-sync database schema...')
     await db.sync({ force: true })
     this.log.br().log('Done.')
   })
@@ -47,8 +47,8 @@ export default class UndexerCommands extends Commands {
     name: "db sync alter",
     info: "UNSAFE: alter database to latest schema"
   }, async () => {
-    this.log.br().log('Altering database...')
     const { default: db } = await import('./src/db.js')
+    this.log.br().log('Trying to alter database schema...')
     await db.sync({ alter: true })
     this.log.br().log('Done.')
   })
@@ -89,13 +89,39 @@ export default class UndexerCommands extends Commands {
     this.log.info('Done in', performance.now() - t0, 'msec')
   })
 
-  validatorsFetch = this.command({
-    name: 'validators fetch',
-    info: 'fetch current info about validators'
+  validatorsFetchList = this.command({
+    name: 'validators fetch list',
+    info: 'fetch list of validators'
   }, async () => {
     const { default: getRPC } = await import('./src/rpc.js')
     const chain = await getRPC()
-    console.log(Object.values(await chain.fetchValidators()))
+    const addresses = Object.values(await chain.fetchValidators({
+      tendermintMetadata: false,
+      namadaMetadata:     false,
+    })).map(v=>v.namadaAddress).sort()
+    for (const address of addresses) {
+      this.log.log('Validator:', address)
+    }
+    this.log.br().info("Use the 'validators fetch all' command to get details.")
+  })
+
+  validatorsFetchAll = this.command({
+    name: 'validators fetch all',
+    info: 'fetch detailed info about validators'
+  }, async () => {
+    const { default: getRPC } = await import('./src/rpc.js')
+    const chain = await getRPC()
+    const validators = Object.values(await chain.fetchValidators())
+    const states = {}
+    for (const validator of validators) {
+      this.log.br().log(validator)
+      states[validator.state?.state]??=0
+      states[validator.state?.state]++
+    }
+    this.log.br().info(validators.length, "validators.")
+    for (const [state, count] of Object.entries(states)) {
+      this.log.info(`${state}:`.padEnd(16), count)
+    }
   })
 
   validatorsUpdate = this.command({

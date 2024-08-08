@@ -9,8 +9,8 @@ import { retryForever } from "./utils.js";
 import db, { withErrorLog, Validator } from './db.js'
 
 import {
-  VALIDATOR_FETCH_PARALLEL,
-  VALIDATOR_FETCH_DETAILS_PARALLEL
+  VALIDATOR_TENDERMINT_METADATA_PARALLEL,
+  VALIDATOR_NAMADA_METADATA_PARALLEL,
 } from './config.js';
 
 export async function tryUpdateValidators (chain, height) {
@@ -23,23 +23,42 @@ export async function tryUpdateValidators (chain, height) {
 }
 
 export async function updateValidators (chain, height) {
-  console.log("=> Updating validators");
-  const validators = Object.values(await chain.fetchValidators({
-    parallel:        VALIDATOR_FETCH_PARALLEL,
-    parallelDetails: VALIDATOR_FETCH_DETAILS_PARALLEL,
-  }))
-  await withErrorLog(() => db.transaction(async dbTransaction => {
-    await Validator.destroy({ where: {} }, { transaction: dbTransaction });
-    for (const validatorData of validators) {
-      //console.log(validatorData)
-      await Validator.create(validatorData, { transaction: dbTransaction });
+  console.log("=> Updating validators")
+  let count   = 0
+  let added   = 0
+  let updated = 0
+  for await (const validator of chain.fetchValidatorsIter({
+    parallel: true
+  })) {
+    const existing = await Validator.findOne({
+      where: { namadaAddress: validator.namadaAddress }
+    })
+    if (existing) {
+      console.log('Updating validator', validator)
+      existing.publicKey = validator.publicKey
+      existing.pastPublicKeys = [...new Set([
+        ...existing.pastPublicKeys||[],
+        validator.publicKey
+      ].filter(Boolean))]
+      existing.consensusAddress = validator.address
+      existing.pastConsensusAddresses = [...new Set([
+        ...existing.pastConsensusAddresses||[],
+        validator.address
+      ].filter(Boolean))]
+      existing.votingPower = validator.votingPower
+      existing.proposerPriority = validator.proposerPriority
+      existing.metadata = validator.metadata
+      existing.commission = validator.commission
+      existing.stake = validator.stake
+      existing.state = validator.state
+      await existing.save()
+      updated++
+    } else {
+      console.log('Adding validator', validator.namadaAddress)
+      await Validator.create(validator)
+      added++
     }
-  }), {
-    update: 'validators',
-    height
-  })
-  console.log(
-    'Updated to', Object.keys(validators).length, 'validators'
-  )
-  return validators
+    count++
+  }
+  console.log(`=> ${count} validators (added ${added}, updated ${updated})`)
 }

@@ -60,24 +60,30 @@ export const routes = [
 
   ['/block', async function dbBlock (req, res) {
     const timestamp = new Date().toISOString()
-    const attrs = Query.defaultAttributes(['blockHeight', 'blockHash', 'blockHeader'])
+    const attrs = Query.defaultAttributes(['blockHeight', 'blockHash', 'blockHeader', 'blockData'])
     const { height, hash } = req.query
     const block = await Query.block({ height, hash })
     if (!block) {
       return res.status(404).send({ error: 'Block not found' })
     }
     const transactions = await Query.transactionsAtHeight(block.blockHeight)
+    const signers = block.blockData.result.block.last_commit.signatures.map(s=>s.validator_address)
     return res.status(200).send({
       timestamp,
       chainId,
       blockHeight:      block.blockHeight,
       blockHash:        block.blockHash,
-      blockHeader:      block.blockHeader,
       blockTime:        block.blockTime,
       epoch:            block.epoch,
-      signatures:       block.signatures,
       transactionCount: transactions.count,
       transactions:     transactions.rows.map(row => row.toJSON()),
+
+      proposer: await Query.validatorByConsensusAddress(
+        block.blockHeader.proposerAddress
+      ),
+      signers:  await Promise.all(signers.filter(Boolean).map(
+        signer=>Query.validatorByConsensusAddress(signer)
+      )),
     })
   }],
 
@@ -125,8 +131,12 @@ export const routes = [
     if (validator === null) return res.status(404).send({ error: 'Validator not found' });
     validator = { ...validator.get() }
     validator.metadata ??= {}
+    const consensusAddresses = new Set([
+      validator.consensusAddress,
+      ...validator.pastConsensusAddresses||[]
+    ])
     let uptime, lastSignedBlocks = [], currentHeight, countedBlocks
-    if (validator.address && ('uptime' in req.query)) {
+    if ('uptime' in req.query) {
       // Count number of times the validator's consensus address is encountered
       // in the set of all signatures belonging to the past 100 blocks.
       // This powers the uptime blocks visualization in the validator detail page.
@@ -142,7 +152,7 @@ export const routes = [
       } of latestBlocks) {
         let present = false
         for (const { validator_address } of blockData.result.block.last_commit.signatures) {
-          if (validator_address === validator.address) {
+          if (consensusAddresses.has(validator_address)) {
             present = true
             break
           }
