@@ -99,8 +99,9 @@ export const blocks = async ({
 }) => {
   const [total, latest, oldest] =
     await Promise.all([totalBlocks(), latestBlock(), oldestBlock()])
-  const address =
-    publicKey ? await validatorPublicKeyToConsensusAddress(publicKey) : undefined
+  const { consensusAddress: address, pastConsensuAddresses } =
+    publicKey ? await validatorPublicKeyToConsensusAddresses(publicKey) : undefined
+  // TODO: use all past consensus addresses to filter block list for given validator
   if (publicKey && !address) {
     return {
       address: null,
@@ -290,10 +291,10 @@ export const validatorsTop = ({ limit = 15 } = {}) =>
     offset: 0,
   })
 
-export const validatorPublicKeyToConsensusAddress = (publicKey = '') => DB.Validator.findOne({
-  attributes: { include: [ 'address', 'consensusAddresses' ] },
+export const validatorPublicKeyToConsensusAddresses = (publicKey = '') => DB.Validator.findOne({
+  attributes: { include: [ 'consensusAddress', 'pastConsensusAddresses' ] },
   where: { publicKey }
-}).then(validator=>validator.address)
+}).then(v=>v.get())
 
 export const defaultAttributes = (args = {}) => {
   const attrs = { exclude: ['createdAt', 'updatedAt'] }
