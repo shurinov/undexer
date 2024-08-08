@@ -9,7 +9,7 @@ info:
     url: "https://github.com/hackbg/undexer"
 
 servers:
-  - url: "https://undexer.demo.hack.bg/v3/"
+  - url: "https://undexer-v3.demo.hack.bg/v3/"
   - url: /v3/
 
 paths:
