@@ -16,22 +16,24 @@ const db = new Sequelize(DATABASE_URL, {
   supportBigNumbers: true,
 })
 
+let dbName
 try {
-  console.br().log(`Creating database "${CHAIN_ID}"...`)
-  const { username, password, hostname, port } = new URL(DATABASE_URL)
+  const { username, password, hostname, port, pathname } = new URL(DATABASE_URL)
+  dbName = pathname.slice(1) || CHAIN_ID
+  console.br().log(`Creating database "${dbName}"...`)
   const pg = new PG.Client({ user: username, password, host: hostname, port })
   await pg.connect()
-  await pg.query(`CREATE DATABASE "${CHAIN_ID}"`)
+  await pg.query(`CREATE DATABASE "${dbName}"`)
 } catch (e) {
   if (e.code === '42P04') {
-    console.info(`Database "${CHAIN_ID}" exists.`)
+    console.info(`Database "${dbName}" exists.`)
   } else {
     if (e.code === 'ECONNREFUSED') {
       console.error(`Connection refused. Make sure Postgres is running at ${e.address}:${e.port}`)
     } else {
       console.error(e)
     }
-    console.error(`Failed to create database "${CHAIN_ID}". See above for details.`)
+    console.error(`Failed to create database "${dbName}". See above for details.`)
     process.exit(1)
   }
 }
