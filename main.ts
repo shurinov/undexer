@@ -64,8 +64,27 @@ export default class UndexerCommands extends Commands {
   }, () => import('./bin/indexer.js'))
 
   block = this.command({
-    name: 'block',
-    info: 'fetch, print, and index a block of transactions',
+    name: 'block fetch',
+    info: 'fetch and print a block of transactions',
+    args: 'HEIGHT'
+  }, async (height: number) => {
+    const t0 = performance.now()
+    const { default: getRPC } = await import('./src/rpc.js')
+    const chain = await getRPC(height)
+    // Fetch and decode block
+    const block = await chain.fetchBlock({ height })
+    height ??= block.height
+    // Print block and transactions
+    this.log.br().log(block)
+    for (const transaction of block.transactions) {
+      this.log.br().log(transaction)
+    }
+    this.log.info('Done in', performance.now() - t0, 'msec')
+  })
+
+  block = this.command({
+    name: 'block index',
+    info: 'fetch, print, and store a block of transactions',
     args: 'HEIGHT'
   }, async (height: number) => {
     const t0 = performance.now()
