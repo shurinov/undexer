@@ -77,7 +77,11 @@ export default class UndexerCommands extends Commands {
     // Print block and transactions
     this.log.br().log(block)
     for (const transaction of block.transactions) {
-      this.log.br().log(transaction)
+      const { hash, data: { batch, sections, ...data } } = transaction
+      this.log.br()
+        .log('Transaction', hash, ':', data)
+        .log('Sections for', hash, ':', sections)
+        .log('Batch in', hash, ':', batch)
     }
     this.log.info('Done in', performance.now() - t0, 'msec')
   })
@@ -97,7 +101,11 @@ export default class UndexerCommands extends Commands {
     // Print block and transactions
     this.log.br().log(block)
     for (const transaction of block.transactions) {
-      this.log.br().log(transaction)
+      const { hash, data: { batch, sections, ...data } } = transaction
+      this.log.br()
+        .log('Transaction', hash, ':', data)
+        .log('Sections for', hash, ':', sections)
+        .log('Batch in', hash, ':', batch)
     }
     // Write block to database
     this.log.br().log('Syncing database...')
