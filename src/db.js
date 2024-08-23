@@ -7,7 +7,7 @@ export { Sequelize, DataTypes, Op }
 
 const console = new Console("DB");
 
-const { DATE, TEXT, JSONB, INTEGER, ENUM } = DataTypes
+const { DATE, TEXT, BLOB, JSONB, INTEGER, ENUM } = DataTypes
 
 const db = new Sequelize(DATABASE_URL, {
   dialect: "postgres",
@@ -160,6 +160,12 @@ export const
     content:  JSONField('content'),
     metadata: JSONField('metadata'),
     result:   NullableJSONField('result'),
+  }),
+
+  ProposalWASM = db.define('proposal_wasm', {
+    id:       IntegerPrimaryKey(),
+    codeKey:  { type: TEXT },
+    wasm:     { type: BLOB },
   }),
 
   Vote = db.define("vote", {

@@ -20,6 +20,7 @@ export default class UndexerCommands extends Commands {
     console.log('Transactions:', await DB.Transaction.count())
     console.log('Validators:', await DB.Validator.count())
     console.log('Proposals:', await DB.Proposal.count())
+    console.log('Proposal WASM binaries:', await DB.ProposalWASM.count())
     console.log('Votes:', await DB.Vote.count())
   })
 
@@ -63,7 +64,7 @@ export default class UndexerCommands extends Commands {
     info: "run the indexer"
   }, () => import('./bin/indexer.js'))
 
-  block = this.command({
+  blockFetch = this.command({
     name: 'block fetch',
     info: 'fetch and print a block of transactions',
     args: '[HEIGHT]'
@@ -87,7 +88,7 @@ export default class UndexerCommands extends Commands {
     this.log.info('Done in', performance.now() - t0, 'msec')
   })
 
-  block = this.command({
+  blockIndex = this.command({
     name: 'block index',
     info: 'fetch, print, and store a block of transactions',
     args: '[HEIGHT]'
@@ -230,17 +231,34 @@ export default class UndexerCommands extends Commands {
     name: 'proposal fetch',
     args: 'ID',
     info: 'fetch proposal from chain'
-  }, (id: string) =>
-    import('./src/rpc.js')
-      .then(({ default: getRPC })=>getRPC())
-      .then(chain=>chain.fetchProposalInfo(id))
-      .then(data=>data
-        ? this.log
-          .log(data.proposal)
-          .log(data.votes)
-          .log(data.result)
-        : this.log
-          .error(`Proporsal ${id} not found.`)))
+  }, async (id: string) => {
+    const chain = await import('./src/rpc.js').then(({ default: getRPC })=>getRPC())
+    const data = await chain.fetchProposalInfo(id)
+    if (data) {
+      this.log
+        .log('Proposal:', data.proposal)
+        .log('Votes:',    data.votes)
+        .log('Result:',   data.result)
+      if (data.proposal.type?.type === 'DefaultWithWasm') {
+        const result = await chain.fetchProposalWasm(id)
+        if (result) {
+          this.log.log('WASM:', result.wasm.length, 'bytes')
+        }
+      }
+    } else {
+      this.log.error(`Proporsal ${id} not found.`)
+    }
+  })
+
+  proposalIndex = this.command({
+    name: 'proposal index',
+    args: 'ID',
+    info: 'fetch and store proposal from chain'
+  }, async (id: string) => {
+    const chain = await import('./src/rpc.js').then(({ default: getRPC })=>getRPC())
+    const { updateProposal } = await import('./src/proposal.js')
+    await updateProposal(chain, id)
+  })
 
   epoch = this.command({
     name: 'epoch',

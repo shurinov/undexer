@@ -31,9 +31,10 @@ export async function updateProposal (chain, id, height) {
     metadata.type.ops = [...metadata.type.ops]
   }
   await DB.withErrorLog(() => DB.default.transaction(async dbTransaction => {
+    console.log('++ Adding proposal', id, 'with', votes.length, 'votes')
     await DB.Proposal.destroy({ where: { id } }, { transaction: dbTransaction })
     await DB.Proposal.create({ id, content, metadata, result }, { transaction: dbTransaction })
-    console.log('++ Adding proposal', id, 'with', votes.length, 'votes')
+    console.log('++ Adding votes for', id, 'count:', votes.length, 'vote(s)')
     await DB.Vote.destroy({ where: { proposal: id } }, { transaction: dbTransaction })
     for (const vote of votes) {
       console.log('++ Adding vote for', id)
@@ -44,5 +45,17 @@ export async function updateProposal (chain, id, height) {
     height,
     id,
   })
+  if (metadata.type?.type === 'DefaultWithWasm') {
+    console.log('Fetching WASM for proposal', id)
+    const result = await chain.fetchProposalWasm(id)
+    if (result) {
+      const { id, codeKey, wasm } = result
+      await DB.withErrorLog(()=> DB.default.transaction(async dbTransaction => {
+        console.log('++ Adding proposal WASM for', id, 'length:', wasm.length, 'bytes')
+        await DB.ProposalWASM.destroy({ where: { id } }, { transaction: dbTransaction })
+        await DB.ProposalWASM.create({ id, codeKey, wasm }, { transaction: dbTransaction })
+      }))
+    }
+  }
   console.log('++ Added proposal', id, 'with', votes.length, 'votes')
 }
