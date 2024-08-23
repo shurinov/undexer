@@ -12,8 +12,8 @@ export const DATABASE_URL =
   process.env.DATABASE_URL || `postgres://postgres:insecure@localhost:5432/${CHAIN_ID}`
 
 export const RPC_URL =
-  process.env.RPC_URL || 'https://rpc.housefire.tududes.com/';
-  //process.env.RPC_URL || 'https://rpc.knowable.run/';
+  //process.env.RPC_URL || 'https://rpc.housefire.tududes.com/';
+  process.env.RPC_URL || 'https://rpc.knowable.run/';
 
 export const NODE_LOWEST_BLOCK_HEIGHT =
   process.env.NODE_LOWEST_BLOCK_HEIGHT ?? 0; //237907;
