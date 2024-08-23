@@ -66,7 +66,7 @@ export default class UndexerCommands extends Commands {
   block = this.command({
     name: 'block fetch',
     info: 'fetch and print a block of transactions',
-    args: 'HEIGHT'
+    args: '[HEIGHT]'
   }, async (height: number) => {
     const t0 = performance.now()
     const { default: getRPC } = await import('./src/rpc.js')
@@ -77,11 +77,12 @@ export default class UndexerCommands extends Commands {
     // Print block and transactions
     this.log.br().log(block)
     for (const transaction of block.transactions) {
-      const { hash, data: { batch, sections, ...data } } = transaction
+      const { hash, data: { batch, sections, content, ...data } } = transaction
       this.log.br()
         .log('Transaction', hash, ':', data)
-        .log('Sections for', hash, ':', sections)
-        .log('Batch in', hash, ':', batch)
+        .log('Sections of', hash, ':', sections)
+        .log('Batched in', hash, ':', batch)
+        .log('Content of', hash, ':', content)
     }
     this.log.info('Done in', performance.now() - t0, 'msec')
   })
@@ -89,7 +90,7 @@ export default class UndexerCommands extends Commands {
   block = this.command({
     name: 'block index',
     info: 'fetch, print, and store a block of transactions',
-    args: 'HEIGHT'
+    args: '[HEIGHT]'
   }, async (height: number) => {
     const t0 = performance.now()
     const { updateBlock } = await import('./src/block.js')
@@ -217,7 +218,6 @@ export default class UndexerCommands extends Commands {
 
   proposalCount = this.command({
     name: 'proposal count',
-    args: 'ID',
     info: 'fetch count of proposals from chain'
   }, (id: string) =>
     import('./src/rpc.js')
