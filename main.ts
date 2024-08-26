@@ -286,7 +286,7 @@ export default class UndexerCommands extends Commands {
     this.log(blocks.size, 'blocks containing transaction')
     const { updateBlock } = await import('./src/block.js')
     const chain = await import('./src/rpc.js').then(({ default: getRPC })=>getRPC())
-    for (const height of [...blocks.sort()]) {
+    for (const height of [...blocks].sort()) {
       this.log('Reindexing block', height)
       await updateBlock({ chain, height })
     }
