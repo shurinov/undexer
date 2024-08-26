@@ -40,5 +40,5 @@ cli:
 repl:
   docker compose run api -c "./undexer repl"
 push:
-  git push -u origin
   git push -u github
+  git push -u origin
