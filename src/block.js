@@ -10,30 +10,21 @@ import { cleanup } from './utils.js'
 
 const console = new Console('Block')
 
-export async function tryUpdateBlocks (
-  chain,
-  events
-) {
-  // should use newer node for the blockchain height
-  const currentBlockOnChain = await chain.fetchHeight();
-  const latestBlockInDb     = await Query.latestBlock() || Number(NODE_LOWEST_BLOCK_HEIGHT);
-  console.log("=> Current block on chain:", currentBlockOnChain);
-  console.log("=> Latest block in DB:", latestBlockInDb);
-  if (currentBlockOnChain > latestBlockInDb) {
-    await updateBlocks(
-      chain, events, latestBlockInDb + 1, currentBlockOnChain
-    );
+/** Called every `BLOCK_UPDATE_INTERVAL` msec by a `setInterval` in `bin/indexer.js` */
+export async function tryUpdateBlocks (chain, events) {
+  // Setting `NODE_LOWEST_BLOCK_HEIGHT` allows a minimum block to be set
+  const latestBlockInDb = await Query.latestBlock() || Number(NODE_LOWEST_BLOCK_HEIGHT)
+  console.log("=> Latest block in DB:", latestBlockInDb)
+  const latestBlockOnChain = await chain.fetchHeight()
+  console.log("=> Latest block on chain:", latestBlockOnChain)
+  if (latestBlockOnChain > latestBlockInDb) {
+    await updateBlocks(chain, events, latestBlockInDb + 1, latestBlockOnChain)
   } else {
     console.info("=> No new blocks");
   }
 }
 
-export async function updateBlocks (
-  chain,
-  events,
-  startHeight,
-  endHeight
-) {
+export async function updateBlocks (chain, events, startHeight, endHeight) {
   console.log("=> Processing blocks from", startHeight, "to", endHeight);
   let height = startHeight
   try {
@@ -46,14 +37,11 @@ export async function updateBlocks (
   }
 }
 
-export async function updateBlock ({
-  chain,
-  events,
-  height,
-  block = chain.fetchBlock({ height, raw: true })
-}) {
+/** Uses the `/block` and `/block_results` RPC endpoints
+   * to fetch data for a single block. */
+export async function updateBlock ({ chain, events, height, block }) {
   const t0 = performance.now()
-  block = await Promise.resolve(block)
+  block ??= chain.fetchBlock({ height, raw: true })
   await DB.withErrorLog(() => DB.default.transaction(async dbTransaction => {
     const data = {
       chainId:      block.header.chainId,

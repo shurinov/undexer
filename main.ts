@@ -68,7 +68,7 @@ export default class UndexerCommands extends Commands {
     name: 'block fetch',
     info: 'fetch and print a block of transactions',
     args: '[HEIGHT]'
-  }, async (height: number) => {
+  }, async (height?: number) => {
     const t0 = performance.now()
     const { default: getRPC } = await import('./src/rpc.js')
     const chain = await getRPC(height)
@@ -92,7 +92,7 @@ export default class UndexerCommands extends Commands {
     name: 'block index',
     info: 'fetch, print, and store a block of transactions',
     args: '[HEIGHT]'
-  }, async (height: number) => {
+  }, async (height?: number) => {
     const t0 = performance.now()
     const { updateBlock } = await import('./src/block.js')
     const { default: getRPC } = await import('./src/rpc.js')
@@ -272,5 +272,24 @@ export default class UndexerCommands extends Commands {
       }))
       .then(this.log)
       .catch(this.error))
+
+  reindexTransactions = this.command({
+    name: 'reindex txs',
+    info: 'reindex only blocks containing transactions',
+    args: '[TXTYPE]', // TODO
+  }, async () => {
+    const {Transaction} = await import('./src/db.js')
+    const attributes = { include: [ 'blockHeight' ] }
+    const where = { /* TODO filter by tx type */ }
+    const txs = await Transaction.findAll({ where, attributes })
+    const blocks = new Set(txs.map(tx=>tx.get().blockHeight))
+    this.log(blocks.size, 'blocks containing transaction')
+    const { updateBlock } = await import('./src/block.js')
+    const chain = await import('./src/rpc.js').then(({ default: getRPC })=>getRPC())
+    for (const height of [...blocks.sort()]) {
+      this.log('Reindexing block', height)
+      await updateBlock({ chain, height })
+    }
+  })
 
 }
