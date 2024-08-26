@@ -287,8 +287,17 @@ export default class UndexerCommands extends Commands {
     const { updateBlock } = await import('./src/block.js')
     const chain = await import('./src/rpc.js').then(({ default: getRPC })=>getRPC())
     for (const height of [...blocks].sort()) {
-      this.log('Reindexing block', height)
-      await updateBlock({ chain, height })
+      while (true) {
+        this.log('Reindexing block', height)
+        try {
+          await updateBlock({ chain, height })
+          break
+        } catch (e) {
+          console.error(e)
+          this.log.error('Failed to reindex block', height, 'retrying in 1s')
+          await new Promise(resolve=>setTimeout(resolve, 1000))
+        }
+      }
     }
   })
 
