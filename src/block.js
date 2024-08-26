@@ -39,7 +39,7 @@ export async function updateBlocks (chain, events, startHeight, endHeight) {
 
 /** Uses the `/block` and `/block_results` RPC endpoints
    * to fetch data for a single block. */
-export async function updateBlock ({ chain, events, height, block }) {
+export async function updateBlock ({ chain, events, height, block, update = false }) {
   const t0 = performance.now()
   block ??= await chain.fetchBlock({ height, raw: true })
   await DB.withErrorLog(() => DB.default.transaction(async dbTransaction => {
@@ -57,7 +57,7 @@ export async function updateBlock ({ chain, events, height, block }) {
         return undefined
       }),
     }
-    await DB.Block.create(data, { transaction: dbTransaction });
+    await DB.Block.upsert(data, { transaction: dbTransaction });
     for (const transaction of block.transactions) {
       await updateTransaction({
         block,
@@ -120,5 +120,5 @@ export async function updateTransaction ({
     txData:      transaction,
   }
   console.log("=> Adding transaction", data);
-  await DB.Transaction.create(data, { transaction: dbTransaction });
+  await DB.Transaction.upsert(data, { transaction: dbTransaction });
 }
