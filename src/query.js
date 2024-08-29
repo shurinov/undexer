@@ -335,6 +335,7 @@ export const transferList = async ({
         SELECT
           "blockHeight",
           "txHash",
+          "txTime",
           jsonb_path_query("txData", '$.sources[*].owner') AS source,
           jsonb_path_query("txData", '$.sources[*].token') AS sourceToken,
           jsonb_path_query("txData", '$.sources[*][1]')    AS sourceAmount,
