@@ -326,6 +326,7 @@ export const transferList = async ({
         SELECT
           "blockHeight",
           "txHash",
+          "txTime",
           jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
         FROM "transactions"
         WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
