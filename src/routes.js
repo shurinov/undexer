@@ -221,11 +221,21 @@ export const routes = [
     res.status(200).send({ count, votes: rows });
   }],
 
-  ['/transfers', async function dbTransfersFrom (req, res) {
+  ['/transfers', async function dbTransfers (req, res) {
     const { limit, offset } = pagination(req)
-    const { by, from, to } = req.query
-    throw new Error('not implemented')
+    const { address, source, target } = req.query
+    const [count, transfers] = await Promise.all([
+      Query.transferCount({ address, source, target }),
+      Query.transferList({ address, source, target, limit, offset }),
+    ])
+    res.status(200).send({ count, transfers })
   }],
+
+  //['/signed/:address', async function dbAddressInfo (req, res) {
+    //const { address } = req.params
+
+    //throw new Error('not implemented')
+  //}]
 
   //['/height',                     RPC.rpcHeight],
 ]

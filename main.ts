@@ -306,35 +306,9 @@ export default class UndexerCommands extends Commands {
     info: 'return transfers for given adderess',
     args: 'ADDRESS'
   }, async (address: string) => {
-    const { default: db } = await import('./src/db.js')
+    const { transferList } = await import('./src/query.js')
     const t0 = performance.now()
-    console.log(await db.query(`
-      WITH
-
-        "transactionData" AS (
-          SELECT
-            "blockHeight",
-            "txHash",
-            jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
-          FROM "transactions"
-          WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
-        ),
-
-        "transfers" AS (
-          SELECT
-            "blockHeight",
-            "txHash",
-            jsonb_path_query("txData", '$.sources[*].owner') AS source,
-            jsonb_path_query("txData", '$.sources[*].token') AS sourceToken,
-            jsonb_path_query("txData", '$.sources[*][1]')    AS sourceAmount,
-            jsonb_path_query("txData", '$.targets[*].owner') AS target,
-            jsonb_path_query("txData", '$.targets[*].token') AS targetToken,
-            jsonb_path_query("txData", '$.targets[*][1]')    AS targetAmount
-          FROM "transactionData"
-        )
-
-      SELECT * FROM "transfers" ORDER BY "blockHeight" DESC LIMIT 10
-    `,))
+    console.log(await transferList({ address }))
     console.log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
   })
 

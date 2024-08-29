@@ -1,6 +1,6 @@
 import db from './db.js'
 import * as DB from './db.js'
-import { Sequelize, Op } from "sequelize"
+import { Sequelize, Op, QueryTypes } from "sequelize"
 import { intoRecord } from '@hackbg/into'
 
 export const totalTransactions = () =>
@@ -266,6 +266,82 @@ export const transactionsLatest = ({ limit = 15 } = {}) =>
 
 export const transactionsAtHeight = (blockHeight = 0) =>
   DB.Transaction.findAndCountAll({ where: { blockHeight } })
+
+export const transferCount = async ({
+  address = "",
+  source  = address,
+  target  = address,
+}) => {
+  return Number((await db.query(`
+    WITH
+      "transactionData" AS (
+        SELECT
+          jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
+        FROM "transactions"
+        WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
+      ),
+      "transfers" AS (
+        SELECT
+          jsonb_path_query("txData", '$.sources[*].owner') AS source,
+          jsonb_path_query("txData", '$.targets[*].owner') AS target
+        FROM "transactionData"
+      )
+    SELECT COUNT(*) FROM "transfers"
+    WHERE "source" = :source OR "target" = :target
+  `, {
+    type: QueryTypes.COUNT,
+    replacements: {
+      source: JSON.stringify(source),
+      target: JSON.stringify(target),
+    }
+  }))[0][0].count)
+}
+
+export const transferList = async ({
+  address = "",
+  source  = address,
+  target  = address,
+  limit   = 100,
+  offset  = 0
+}) => {
+  return await db.query(`
+    WITH
+
+      "transactionData" AS (
+        SELECT
+          "blockHeight",
+          "txHash",
+          jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
+        FROM "transactions"
+        WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
+      ),
+
+      "transfers" AS (
+        SELECT
+          "blockHeight",
+          "txHash",
+          jsonb_path_query("txData", '$.sources[*].owner') AS source,
+          jsonb_path_query("txData", '$.sources[*].token') AS sourceToken,
+          jsonb_path_query("txData", '$.sources[*][1]')    AS sourceAmount,
+          jsonb_path_query("txData", '$.targets[*].owner') AS target,
+          jsonb_path_query("txData", '$.targets[*].token') AS targetToken,
+          jsonb_path_query("txData", '$.targets[*][1]')    AS targetAmount
+        FROM "transactionData"
+      )
+
+    SELECT * FROM "transfers"
+    WHERE "source" = :source OR "target" = :target
+    ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
+  `, {
+    type: QueryTypes.SELECT,
+    replacements: {
+      source: JSON.stringify(source),
+      target: JSON.stringify(target),
+      limit,
+      offset
+    }
+  })
+}
 
 export const validatorByConsensusAddress = consensusAddress =>
   DB.Validator.findOne({
