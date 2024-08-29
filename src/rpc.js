@@ -17,7 +17,7 @@ const rpcVariant = async url => {
     } catch (e) {
       console.error(e)
       console.warn('Failed to connect to RPC', url, '; retrying in 1s')
-      await new Promise(resolve=>setTimeout(resolve, 1000)).
+      await new Promise(resolve=>setTimeout(resolve, 1000))
     }
   }
   return connection

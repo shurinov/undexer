@@ -267,6 +267,21 @@ export const transactionsLatest = ({ limit = 15 } = {}) =>
 export const transactionsAtHeight = (blockHeight = 0) =>
   DB.Transaction.findAndCountAll({ where: { blockHeight } })
 
+export const transferredTokens = async () => {
+  return await db.query(`
+    WITH "transactionData" AS (
+      SELECT
+        jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
+      FROM "transactions"
+      WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
+    )
+    SELECT
+      jsonb_path_query("txData", '$.source[*].token') AS source_token,
+      jsonb_path_query("txData", '$.target[*].token') AS target_token
+    FROM "transactionData"
+  `)
+}
+
 export const transferCount = async ({
   address = "",
   source  = address,
