@@ -7,10 +7,21 @@ import {
   NODE_LOWEST_BLOCK_HEIGHT
 } from './config.js';
 
-const rpcVariant = async url => Namada.connect({
-  url,
-  decoder: await readFile("node_modules/@fadroma/namada/pkg/fadroma_namada_bg.wasm")
-})
+const rpcVariant = async url => {
+  const decoder = await readFile("node_modules/@fadroma/namada/pkg/fadroma_namada_bg.wasm")
+  let connection
+  while (true) {
+    try {
+      connection = await Namada.connect({ url, decoder })
+      break
+    } catch (e) {
+      console.error(e)
+      console.warn('Failed to connect to RPC', url, '; retrying in 1s')
+      await new Promise(resolve=>setTimeout(resolve, 1000))
+    }
+  }
+  return connection
+}
 
 /** Map of first block number that uses a certain RPC URL
   * to a pair of { query, connection } objects that wrap the RPC. */

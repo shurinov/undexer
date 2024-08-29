@@ -276,17 +276,17 @@ export default class UndexerCommands extends Commands {
   reindexTransactions = this.command({
     name: 'reindex txs',
     info: 'reindex only blocks containing transactions',
-    args: '[TXTYPE]', // TODO
-  }, async () => {
+    args: '[MIN_BLOCK]'
+  }, async (minHeight: number = 0) => {
     const {Transaction} = await import('./src/db.js')
     const attributes = { include: [ 'blockHeight' ] }
     const where = { /* TODO filter by tx type */ }
     const txs = await Transaction.findAll({ where, attributes })
-    const blocks = new Set(txs.map(tx=>tx.get().blockHeight))
+    const blocks = new Set(txs.map(tx=>tx.get().blockHeight).filter(height=>height>=minHeight))
     this.log(blocks.size, 'blocks containing transaction')
     const { updateBlock } = await import('./src/block.js')
     const chain = await import('./src/rpc.js').then(({ default: getRPC })=>getRPC())
-    for (const height of [...blocks].sort()) {
+    for (const height of [...new Set(blocks)].sort()) {
       while (true) {
         this.log('Reindexing block', height)
         try {
@@ -299,6 +299,17 @@ export default class UndexerCommands extends Commands {
         }
       }
     }
+  })
+
+  transfersBy = this.command({
+    name: 'transfers by',
+    info: 'return transfers for given adderess',
+    args: 'ADDRESS'
+  }, async (address: string) => {
+    const { transferList } = await import('./src/query.js')
+    const t0 = performance.now()
+    console.log(await transferList({ address }))
+    console.log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
   })
 
 }
