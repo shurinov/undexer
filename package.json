@@ -9,7 +9,7 @@
     "undexer": "./undexer"
   },
   "scripts": {
-    "start": "concurrently --raw bin/api.js bin/index.js",
+    "start": "concurrently --raw bin/api.js bin/indexer.js",
     "cli": "node undexer",
     "build:wasm:dev": "cd fadroma/packages/namada && pnpm build:wasm:dev",
     "build:wasm:prod": "cd fadroma/packages/namada && pnpm build:wasm:prod"
