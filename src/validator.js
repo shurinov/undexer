@@ -30,6 +30,7 @@ export async function updateValidators (chain, height) {
   for await (const validator of chain.fetchValidatorsIter({
     parallel: true
   })) {
+    try {
     const existing = await Validator.findOne({
       where: { namadaAddress: validator.namadaAddress }
     })
@@ -59,6 +60,8 @@ export async function updateValidators (chain, height) {
       added++
     }
     count++
-  }
+  } catch (error) {
+    console.log(error);
+  }}
   console.log(`=> ${count} validators (added ${added}, updated ${updated})`)
 }
