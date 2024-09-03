@@ -231,7 +231,7 @@ export const routes = [
     res.status(200).send({ count, transfers })
   }],
 
-  ['/balances/:address', async function dbBalances(req, res) {
+  ['/balances/:address', async function dbBalances (req, res) {
     const { address } = req.params;
     try {
       const chain = await RPC.default();

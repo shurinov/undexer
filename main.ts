@@ -316,34 +316,6 @@ export default class UndexerCommands extends Commands {
       .then(this.log)
       .catch(this.error))
 
-  reindexTransactions = this.command({
-    name: 'reindex txs',
-    info: 'reindex only blocks containing transactions',
-    args: '[MIN_BLOCK]'
-  }, async (minHeight: number = 0) => {
-    const {Transaction} = await import('./src/db.js')
-    const attributes = { include: [ 'blockHeight' ] }
-    const where = { /* TODO filter by tx type */ }
-    const txs = await Transaction.findAll({ where, attributes })
-    const blocks = new Set(txs.map(tx=>tx.get().blockHeight).filter(height=>height>=minHeight))
-    this.log(blocks.size, 'blocks containing transaction')
-    const { updateBlock } = await import('./src/block.js')
-    const chain = await import('./src/rpc.js').then(({ default: getRPC })=>getRPC())
-    for (const height of [...new Set(blocks)].sort()) {
-      while (true) {
-        this.log('Reindexing block', height)
-        try {
-          await updateBlock({ chain, height })
-          break
-        } catch (e) {
-          console.error(e)
-          this.log.error('Failed to reindex block', height, 'retrying in 1s')
-          await new Promise(resolve=>setTimeout(resolve, 1000))
-        }
-      }
-    }
-  })
-
   transfersBy = this.command({
     name: 'transfers by',
     info: 'return transfers for given address',
@@ -404,6 +376,47 @@ export default class UndexerCommands extends Commands {
     this.log
       .log(await unbondCount({ validator }), 'unbond(s) to', bold(validator))
       .log(await unbondList({ validator }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
+  reindexTransactions = this.command({
+    name: 'txs reindex',
+    info: 'reindex only blocks containing transactions',
+    args: '[MIN_BLOCK]'
+  }, async (minHeight: number = 0) => {
+    const {Transaction} = await import('./src/db.js')
+    const attributes = { include: [ 'blockHeight' ] }
+    const where = { /* TODO filter by tx type */ }
+    const txs = await Transaction.findAll({ where, attributes })
+    const blocks = new Set(txs.map(tx=>tx.get().blockHeight).filter(height=>height>=minHeight))
+    this.log(blocks.size, 'blocks containing transaction')
+    const { updateBlock } = await import('./src/block.js')
+    const chain = await import('./src/rpc.js').then(({ default: getRPC })=>getRPC())
+    for (const height of [...new Set(blocks)].sort()) {
+      while (true) {
+        this.log('Reindexing block', height)
+        try {
+          await updateBlock({ chain, height })
+          break
+        } catch (e) {
+          console.error(e)
+          this.log.error('Failed to reindex block', height, 'retrying in 1s')
+          await new Promise(resolve=>setTimeout(resolve, 1000))
+        }
+      }
+    }
+  })
+
+  queryTransactions = this.command({
+    name: 'txs query',
+    info: 'query transactions with given address',
+    args: 'ADDRESS'
+  }, async (address: string) => {
+    const { txWithAddressCount, txWithAddressList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await txWithAddressCount({ address }), 'tx(s) with', bold(address))
+      .log(await txWithAddressList({ address }))
       .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
   })
 
