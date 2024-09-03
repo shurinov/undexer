@@ -63,7 +63,7 @@ export async function updateConsensusValidators(chain) {
         where: { namadaAddress: validator.namadaAddress },
       });
       if (existing) {
-        console.log("Updating validator", validator);
+        console.log("Updating validator", JSON.stringify(validator));
         existing.publicKey = validator.publicKey;
         existing.pastPublicKeys = [
           ...new Set(
