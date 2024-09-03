@@ -282,6 +282,45 @@ export const transferredTokens = async () => {
   `)
 }
 
+export const bondCount = async ({ source = "", validator = "" }) => Number((await db.query(`
+  SELECT COUNT(*) FROM "transactions"
+  WHERE "txData"->'data'->'content'->'type' = '"tx_bond.wasm"'
+  AND (
+    "txData"->'data'->'content'->'data'->'source' = :source
+    OR
+    "txData"->'data'->'content'->'data'->'validator' = :validator
+  )
+`, {
+  replacements: {
+    source:    JSON.stringify(source),
+    validator: JSON.stringify(validator)
+  }
+}))[0][0].count)
+
+export const bondList = async ({
+  source    = "",
+  validator = "",
+  limit     = 100,
+  offset    = 0
+}) => await db.query(`
+  SELECT "blockHeight", "txHash", "txTime", "txData"->'data'->'content'->'data' as data
+  FROM   "transactions"
+  WHERE  "txData"->'data'->'content'->'type' = '"tx_bond.wasm"'
+  AND (
+    "txData"->'data'->'content'->'data'->'source' = :source
+    OR
+    "txData"->'data'->'content'->'data'->'validator' = :validator
+  )
+  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
+`, {
+  type: QueryTypes.SELECT, replacements: {
+    source:    JSON.stringify(source),
+    validator: JSON.stringify(validator),
+    limit,
+    offset
+  }
+})
+
 export const transferCount = async ({
   address = "",
   source  = address,

@@ -1,4 +1,5 @@
 import Commands from "@hackbg/cmds"
+import { bold } from "@hackbg/logs"
 import EventEmitter from 'node:events'
 
 export default class UndexerCommands extends Commands {
@@ -303,13 +304,39 @@ export default class UndexerCommands extends Commands {
 
   transfersBy = this.command({
     name: 'transfers by',
-    info: 'return transfers for given adderess',
+    info: 'return transfers for given address',
     args: 'ADDRESS'
   }, async (address: string) => {
     const { transferList } = await import('./src/query.js')
     const t0 = performance.now()
     console.log(await transferList({ address }))
     console.log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
+  bondsFrom = this.command({
+    name: 'bonds from',
+    info: 'return bonds from given source',
+    args: 'ADDRESS'
+  }, async (source: string) => {
+    const { bondCount, bondList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await bondCount({ source }), 'bond(s) from', bold(source))
+      .log(await bondList({ source }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
+  bondsTo = this.command({
+    name: 'bonds to',
+    info: 'return bonds to given validator',
+    args: 'ADDRESS'
+  }, async (validator: string) => {
+    const { bondCount, bondList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await bondCount({ validator }), 'bond(s) to', bold(validator))
+      .log(await bondList({ validator }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
   })
 
 }
