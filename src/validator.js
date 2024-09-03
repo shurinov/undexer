@@ -63,7 +63,9 @@ export async function updateConsensusValidators(chain) {
         where: { namadaAddress: validator.namadaAddress },
       });
       if (existing) {
-        console.log("Updating validator", JSON.stringify(validator));
+        console.log("Updating validator", JSON.stringify(validator, (k, v) => {
+          (typeof v === 'bigint') ? String(v) : v
+        }));
         existing.publicKey = validator.publicKey;
         existing.pastPublicKeys = [
           ...new Set(
@@ -117,7 +119,9 @@ export async function updateValidators(chain, height) {
         where: { namadaAddress: validator.namadaAddress },
       });
       if (existing) {
-        console.log("Updating validator", JSON.stringify(validator));
+        console.log("Updating validator", JSON.stringify(validator, (k, v) => {
+          (typeof v === 'bigint') ? String(v) : v
+        }));
         existing.publicKey = validator.publicKey;
         existing.pastPublicKeys = [
           ...new Set(
