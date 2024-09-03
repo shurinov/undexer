@@ -64,8 +64,8 @@ export async function updateConsensusValidators(chain) {
       });
       if (existing) {
         console.log("Updating validator", JSON.stringify(validator, (k, v) => {
-          (typeof v === 'bigint') ? String(v) : v
-        }));
+          return (typeof v === 'bigint') ? String(v) : v
+        }))
         existing.publicKey = validator.publicKey;
         existing.pastPublicKeys = [
           ...new Set(
@@ -120,7 +120,7 @@ export async function updateValidators(chain, height) {
       });
       if (existing) {
         console.log("Updating validator", JSON.stringify(validator, (k, v) => {
-          (typeof v === 'bigint') ? String(v) : v
+          return (typeof v === 'bigint') ? String(v) : v
         }));
         existing.publicKey = validator.publicKey;
         existing.pastPublicKeys = [
