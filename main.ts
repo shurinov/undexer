@@ -11,6 +11,16 @@ export default class UndexerCommands extends Commands {
     this.log.label = ''
   }
 
+  api = this.command({
+    name: "api",
+    info: "run the API server"
+  }, () => import('./bin/api.js'))
+
+  indexer = this.command({
+    name: "index",
+    info: "run the indexer"
+  }, () => import('./bin/indexer.js'))
+
   dbStatus = this.command({
     name: 'db status',
     info: 'show the status of the database'
@@ -55,15 +65,17 @@ export default class UndexerCommands extends Commands {
     this.log.br().log('Done.')
   })
 
-  api = this.command({
-    name: "api",
-    info: "run the API server"
-  }, () => import('./bin/api.js'))
-
-  indexer = this.command({
-    name: "index",
-    info: "run the indexer"
-  }, () => import('./bin/indexer.js'))
+  queries = this.command({
+    name: 'db queries',
+    info: 'test all db queries',
+  }, async () => {
+    for (const [name, item] of Object.entries(await import('./src/query.js'))) {
+      if (typeof item === 'function') {
+        this.log.br().log(name)
+        this.log(await item())
+      }
+    }
+  })
 
   blockFetch = this.command({
     name: 'block fetch',
@@ -196,16 +208,46 @@ export default class UndexerCommands extends Commands {
     }
   })
 
-  queries = this.command({
-    name: 'queries',
-    info: 'test all db queries',
-  }, async () => {
-    for (const [name, item] of Object.entries(await import('./src/query.js'))) {
-      if (typeof item === 'function') {
-        this.log.br().log(name)
-        this.log(await item())
-      }
-    }
+  becameValidator = this.command({
+    name: 'validator query become',
+    info: 'query tx_become_validator',
+    args: 'ADDRESS',
+  }, async (address: string) => {
+    const { becomeValidatorCount, becomeValidatorList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await becomeValidatorCount({ address }),
+           'becomeValidator(s) for', bold(address))
+      .log(await becomeValidatorList({ address }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
+  changedValidatorMetadata = this.command({
+    name: 'validator query change metadata',
+    info: 'query tx_change_validator_metadata',
+    args: 'ADDRESS',
+  }, async (validator: string) => {
+    const { changeValidatorMetadataCount, changeValidatorMetadataList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await changeValidatorMetadataCount({ validator }),
+           'changeValidatorMetadata(s) for', bold(validator))
+      .log(await changeValidatorMetadataList({ validator }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
+  deactivatedValidator = this.command({
+    name: 'validator query deactivate',
+    info: 'query tx_deactivate_validator',
+    args: 'ADDRESS',
+  }, async (address: string) => {
+    const { deactivateValidatorCount, deactivateValidatorList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await deactivateValidatorCount({ address }),
+           'deactivateValidator(s) for', bold(address))
+      .log(await deactivateValidatorList({ address }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
   })
 
   parameters = this.command({
@@ -336,19 +378,6 @@ export default class UndexerCommands extends Commands {
     this.log
       .log(await bondCount({ validator }), 'bond(s) to', bold(validator))
       .log(await bondList({ validator }))
-      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
-  })
-
-  becameValidator = this.command({
-    name: 'became validator',
-    info: 'return times this address became a validator',
-    args: 'ADDRESS',
-  }, async (address: string) => {
-    const { becomeValidatorCount, becomeValidatorList } = await import('./src/query.js')
-    let t0 = performance.now()
-    this.log
-      .log(await becomeValidatorCount({ address }), 'becomeValidator(s) to', bold(address))
-      .log(await becomeValidatorList({ address }))
       .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
   })
 

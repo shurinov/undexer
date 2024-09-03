@@ -307,6 +307,58 @@ export const becomeValidatorList = async ({
   }
 })
 
+export const changeValidatorMetadataCount = async ({ validator = "" }) => await toCount(db.query(`
+  SELECT COUNT(*) FROM "transactions"
+  WHERE "txData"->'data'->'content'->'type' = '"tx_change_validator_metadata.wasm"'
+  AND "txData"->'data'->'content'->'data'->'validator' = :validator
+`, {
+  replacements: { validator: JSON.stringify(validator), }
+}))
+
+export const changeValidatorMetadataList = async ({
+  validator = "",
+  limit   = 100,
+  offset  = 0
+}) => await db.query(`
+  SELECT "blockHeight", "txHash", "txTime", "txData"->'data'->'content'->'data' as data
+  FROM   "transactions"
+  WHERE  "txData"->'data'->'content'->'type' = '"tx_change_validator_metadata.wasm"'
+  AND    "txData"->'data'->'content'->'data'->'validator' = :validator
+  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
+`, {
+  type: QueryTypes.SELECT, replacements: {
+    validator: JSON.stringify(validator),
+    limit,
+    offset,
+  }
+})
+
+export const deactivateValidatorCount = async ({ address = "" }) => await toCount(db.query(`
+  SELECT COUNT(*) FROM "transactions"
+  WHERE "txData"->'data'->'content'->'type' = '"tx_deactivate_validator.wasm"'
+  AND "txData"->'data'->'content'->'data'->'address' = :address
+`, {
+  replacements: { address: JSON.stringify(address), }
+}))
+
+export const deactivateValidatorList = async ({
+  address = "",
+  limit   = 100,
+  offset  = 0
+}) => await db.query(`
+  SELECT "blockHeight", "txHash", "txTime", "txData"->'data'->'content'->'data' as data
+  FROM   "transactions"
+  WHERE  "txData"->'data'->'content'->'type' = '"tx_deactivate_validator.wasm"'
+  AND    "txData"->'data'->'content'->'data'->'address' = :address
+  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
+`, {
+  type: QueryTypes.SELECT, replacements: {
+    address: JSON.stringify(address),
+    limit,
+    offset,
+  }
+})
+
 export const bondCount = async ({ source = "", validator = "" }) => await toCount(db.query(`
   SELECT COUNT(*) FROM "transactions"
   WHERE "txData"->'data'->'content'->'type' = '"tx_bond.wasm"'
