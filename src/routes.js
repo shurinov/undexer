@@ -233,18 +233,11 @@ export const routes = [
 
   ['/balances/:address', async function dbBalances(req, res) {
     const { address } = req.params;
-  
     try {
-      const chain = await getRPC();
-  
-      const balances = {};
-  
-      for (const token of TOKENS) {
-        const balance = await chain.fetchBalance(address, token.address);
-        balances[token.symbol] = balance;
-      }
-  
-      res.status(200).send({ balances });
+      const chain = await RPC.default();
+      const tokens = TOKENS.map(token=>token.address);
+      const balances = await chain.fetchBalance(address, tokens);
+      res.status(200).send({ balances: balances[address] });
     } catch (error) {
       console.error('Error fetching balances:', error);
       res.status(500).send({ error: 'Failed to fetch balances' });
