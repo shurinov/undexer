@@ -381,4 +381,30 @@ export default class UndexerCommands extends Commands {
       .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
   })
 
+  unbondsFrom = this.command({
+    name: 'unbonds from',
+    info: 'return unbonds from given source',
+    args: 'ADDRESS'
+  }, async (source: string) => {
+    const { unbondCount, unbondList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await unbondCount({ source }), 'unbond(s) from', bold(source))
+      .log(await unbondList({ source }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
+  unbondsTo = this.command({
+    name: 'unbonds to',
+    info: 'return unbonds to given validator',
+    args: 'ADDRESS'
+  }, async (validator: string) => {
+    const { unbondCount, unbondList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await unbondCount({ validator }), 'unbond(s) to', bold(validator))
+      .log(await unbondList({ validator }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
 }

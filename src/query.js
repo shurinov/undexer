@@ -398,6 +398,45 @@ export const bondList = async ({
   }
 })
 
+export const unbondCount = async ({ source = "", validator = "" }) => await toCount(db.query(`
+  SELECT COUNT(*) FROM "transactions"
+  WHERE "txData"->'data'->'content'->'type' = '"tx_unbond.wasm"'
+  AND (
+    "txData"->'data'->'content'->'data'->'source' = :source
+    OR
+    "txData"->'data'->'content'->'data'->'validator' = :validator
+  )
+`, {
+  replacements: {
+    source:    JSON.stringify(source),
+    validator: JSON.stringify(validator)
+  }
+}))
+
+export const unbondList = async ({
+  source    = "",
+  validator = "",
+  limit     = 100,
+  offset    = 0
+}) => await db.query(`
+  SELECT "blockHeight", "txHash", "txTime", "txData"->'data'->'content'->'data' as data
+  FROM   "transactions"
+  WHERE  "txData"->'data'->'content'->'type' = '"tx_unbond.wasm"'
+  AND (
+    "txData"->'data'->'content'->'data'->'source' = :source
+    OR
+    "txData"->'data'->'content'->'data'->'validator' = :validator
+  )
+  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
+`, {
+  type: QueryTypes.SELECT, replacements: {
+    source:    JSON.stringify(source),
+    validator: JSON.stringify(validator),
+    limit,
+    offset
+  }
+})
+
 export const transferCount = async ({
   address = "",
   source  = address,
