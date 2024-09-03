@@ -42,7 +42,7 @@ export async function updateBlocks (chain, events, startHeight, endHeight) {
 export async function updateBlock ({ chain, events, height, block, update = false }) {
   const t0 = performance.now()
   if (!block) {
-    while (true) {
+    while (true) try {
       block = await chain.fetchBlock({ height, raw: true })
       break
     } catch (e) {
