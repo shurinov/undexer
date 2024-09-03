@@ -4,7 +4,7 @@ import { Op, literal } from 'sequelize';
 import * as DB from './db.js';
 import * as RPC from './rpc.js';
 import * as Query from './query.js';
-import { CHAIN_ID, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from './config.js';
+import { CHAIN_ID, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET, TOKENS } from './config.js';
 
 const NOT_IMPLEMENTED = (req, res) => { throw new Error('not implemented') }
 
@@ -229,6 +229,15 @@ export const routes = [
       Query.transferList({ address, source, target, limit, offset }),
     ])
     res.status(200).send({ count, transfers })
+  }],
+
+  ['/balances/:address', async function dbBalances (req, res) {
+    const { address } = req.params
+   
+    const chain = await getRPC()
+    const balanceNam = await chain.fetchBalance(address, TOKENS[0].address)
+
+    res.status(200).send({ balanceNam })
   }],
 
   //['/signed/:address', async function dbAddressInfo (req, res) {
