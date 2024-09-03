@@ -38,24 +38,18 @@ export async function updateConsensusValidators(chain) {
   let updated = 0;
 
   // Update the current known Consenus list first
-  const currentConsensusList = await Validator.findAll({
+  const consensusListLocal = await Validator.findAll({
     where: { state: { state: "Consensus" } },
     attributes: ["namadaAddress"],
-  });
-
-  if (currentConsensusList.lenght === 0) {
-    return;
-  }
-
-  const consensusAddresses = currentConsensusList
+  })
     .map((x) => x.toJSON())
     .map((x) => x.namadaAddress);
 
-  const validatorInfo = await chain.fetchValidatorsIter({
-    parallel: true,
-    addresses: consensusAddresses,
-  });
+  const consensusListOnChain = await chain
+    .fetchValidatorsConsensus()
+    .map((x) => x.address);
 
+  const consensusAddresses = Array.from(new Set([...consensusListLocal, ...consensusListOnChain]));
   for await (const validator of chain.fetchValidatorsIter({
     parallel: true,
     addresses: consensusAddresses,
@@ -101,7 +95,9 @@ export async function updateConsensusValidators(chain) {
       console.log(error);
     }
   }
-  console.log(`=> ${count} consensus validators (added ${added}, updated ${updated})`);
+  console.log(
+    `=> ${count} consensus validators (added ${added}, updated ${updated})`
+  );
 }
 
 export async function updateValidators(chain, height) {
