@@ -231,14 +231,25 @@ export const routes = [
     res.status(200).send({ count, transfers })
   }],
 
-  ['/balances/:address', async function dbBalances (req, res) {
-    const { address } = req.params
-   
-    const chain = await getRPC()
-    const balanceNam = await chain.fetchBalance(address, TOKENS[0].address)
-
-    res.status(200).send({ balanceNam })
-  }],
+  ['/balances/:address', async function dbBalances(req, res) {
+    const { address } = req.params;
+  
+    try {
+      const chain = await getRPC();
+  
+      const balances = {};
+  
+      for (const token of TOKENS) {
+        const balance = await chain.fetchBalance(address, token.address);
+        balances[token.symbol] = balance;
+      }
+  
+      res.status(200).send({ balances });
+    } catch (error) {
+      console.error('Error fetching balances:', error);
+      res.status(500).send({ error: 'Failed to fetch balances' });
+    }
+  }],  
 
   //['/signed/:address', async function dbAddressInfo (req, res) {
     //const { address } = req.params
