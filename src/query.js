@@ -267,22 +267,47 @@ export const transactionsLatest = ({ limit = 15 } = {}) =>
 export const transactionsAtHeight = (blockHeight = 0) =>
   DB.Transaction.findAndCountAll({ where: { blockHeight } })
 
-export const transferredTokens = async () => {
-  return await db.query(`
-    WITH "transactionData" AS (
-      SELECT
-        jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
-      FROM "transactions"
-      WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
-    )
-    SELECT
-      jsonb_path_query("txData", '$.source[*].token') AS source_token,
-      jsonb_path_query("txData", '$.target[*].token') AS target_token
-    FROM "transactionData"
-  `)
-}
+export const transferredTokens = async () => await db.query(`
+  WITH "transactionData" AS (
+    SELECT jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
+    FROM  "transactions"
+    WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
+  )
+  SELECT
+    jsonb_path_query("txData", '$.source[*].token') AS source_token,
+    jsonb_path_query("txData", '$.target[*].token') AS target_token
+  FROM "transactionData"
+`)
 
-export const bondCount = async ({ source = "", validator = "" }) => Number((await db.query(`
+const toCount = query => query.then(query=>Number(query[0][0].count))
+
+export const becomeValidatorCount = async ({ address = "" }) => await toCount(db.query(`
+  SELECT COUNT(*) FROM "transactions"
+  WHERE "txData"->'data'->'content'->'type' = '"tx_become_validator.wasm"'
+  AND "txData"->'data'->'content'->'data'->'address' = :address
+`, {
+  replacements: { address: JSON.stringify(address), }
+}))
+
+export const becomeValidatorList = async ({
+  address = "",
+  limit   = 100,
+  offset  = 0
+}) => await db.query(`
+  SELECT "blockHeight", "txHash", "txTime", "txData"->'data'->'content'->'data' as data
+  FROM   "transactions"
+  WHERE  "txData"->'data'->'content'->'type' = '"tx_become_validator.wasm"'
+  AND    "txData"->'data'->'content'->'data'->'address' = :address
+  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
+`, {
+  type: QueryTypes.SELECT, replacements: {
+    address: JSON.stringify(address),
+    limit,
+    offset,
+  }
+})
+
+export const bondCount = async ({ source = "", validator = "" }) => await toCount(db.query(`
   SELECT COUNT(*) FROM "transactions"
   WHERE "txData"->'data'->'content'->'type' = '"tx_bond.wasm"'
   AND (
@@ -295,7 +320,7 @@ export const bondCount = async ({ source = "", validator = "" }) => Number((awai
     source:    JSON.stringify(source),
     validator: JSON.stringify(validator)
   }
-}))[0][0].count)
+}))
 
 export const bondList = async ({
   source    = "",
@@ -325,31 +350,29 @@ export const transferCount = async ({
   address = "",
   source  = address,
   target  = address,
-}) => {
-  return Number((await db.query(`
-    WITH
-      "transactionData" AS (
-        SELECT
-          jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
-        FROM "transactions"
-        WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
-      ),
-      "transfers" AS (
-        SELECT
-          jsonb_path_query("txData", '$.sources[*].owner') AS source,
-          jsonb_path_query("txData", '$.targets[*].owner') AS target
-        FROM "transactionData"
-      )
-    SELECT COUNT(*) FROM "transfers"
-    WHERE "source" = :source OR "target" = :target
-  `, {
-    type: QueryTypes.COUNT,
-    replacements: {
-      source: JSON.stringify(source),
-      target: JSON.stringify(target),
-    }
-  }))[0][0].count)
-}
+}) => await toCount(db.query(`
+  WITH
+    "transactionData" AS (
+      SELECT
+        jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
+      FROM "transactions"
+      WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
+    ),
+    "transfers" AS (
+      SELECT
+        jsonb_path_query("txData", '$.sources[*].owner') AS source,
+        jsonb_path_query("txData", '$.targets[*].owner') AS target
+      FROM "transactionData"
+    )
+  SELECT COUNT(*) FROM "transfers"
+  WHERE "source" = :source OR "target" = :target
+`, {
+  type: QueryTypes.COUNT,
+  replacements: {
+    source: JSON.stringify(source),
+    target: JSON.stringify(target),
+  }
+}))
 
 export const transferList = async ({
   address = "",
@@ -360,7 +383,6 @@ export const transferList = async ({
 }) => {
   return await db.query(`
     WITH
-
       "transactionData" AS (
         SELECT
           "blockHeight",
@@ -370,7 +392,6 @@ export const transferList = async ({
         FROM "transactions"
         WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
       ),
-
       "transfers" AS (
         SELECT
           "blockHeight",
@@ -384,7 +405,6 @@ export const transferList = async ({
           jsonb_path_query("txData", '$.targets[*][1]')    AS targetAmount
         FROM "transactionData"
       )
-
     SELECT * FROM "transfers"
     WHERE "source" = :source OR "target" = :target
     ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset

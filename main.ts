@@ -339,4 +339,17 @@ export default class UndexerCommands extends Commands {
       .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
   })
 
+  becameValidator = this.command({
+    name: 'became validator',
+    info: 'return times this address became a validator',
+    args: 'ADDRESS',
+  }, async (address: string) => {
+    const { becomeValidatorCount, becomeValidatorList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await becomeValidatorCount({ address }), 'becomeValidator(s) to', bold(address))
+      .log(await becomeValidatorList({ address }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
 }
