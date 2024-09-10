@@ -280,13 +280,25 @@ export default class UndexerCommands extends Commands {
     if (data) {
       this.log
         .log('Proposal:', data.proposal)
-        .log('Votes:',    data.votes)
         .log('Result:',   data.result)
       if (data.proposal.type?.type === 'DefaultWithWasm') {
         const result = await chain.fetchProposalWasm(id)
         if (result) {
           this.log.log('WASM:', result.wasm.length, 'bytes')
         }
+      }
+      let epoch = await chain.fetchEpoch()
+      if (epoch > data.proposal.votingEndEpoch) {
+        epoch = data.proposal.votingEndEpoch
+      }
+      this.log.br().log('Votes:')
+      for (const vote of data.votes) {
+        if (vote.isValidator) {
+          vote.power = await chain.fetchValidatorStake(vote.validator, epoch)
+        } else {
+          vote.power = await chain.fetchBondWithSlashing(vote.validator, vote.delegator, epoch)
+        }
+        this.log.log(vote)
       }
     } else {
       this.log.error(`Proporsal ${id} not found.`)
