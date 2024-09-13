@@ -133,16 +133,28 @@ export default class UndexerCommands extends Commands {
 
   validatorsFetchList = this.command({
     name: 'validators fetch list',
-    info: 'fetch list of validators'
-  }, async () => {
+    info: 'fetch list of validators',
+    args: '[EPOCH]'
+  }, async (epoch?: string) => {
     const { default: getRPC } = await import('./src/rpc.js')
     const chain = await getRPC()
     const addresses = Object.values(await chain.fetchValidators({
+      epoch,
       tendermintMetadata: false,
       namadaMetadata:     false,
     })).map(v=>v.namadaAddress).sort()
+    if (epoch) {
+      this.log.log(`Validators at epoch ${epoch}:`)
+    } else {
+      this.log.log('Validators at current epoch:')
+    }
     for (const address of addresses) {
       this.log.log('Validator:', address)
+    }
+    if (epoch) {
+      this.log.log(addresses.length, `validator(s) at epoch`, epoch)
+    } else {
+      this.log.log(addresses.length, 'validator(s) at current epoch.')
     }
     this.log.br().info("Use the 'validators fetch all' command to get details.")
   })
@@ -288,20 +300,34 @@ export default class UndexerCommands extends Commands {
         }
       }
       let epoch = await chain.fetchEpoch()
-      if (epoch > data.proposal.votingEndEpoch) {
-        epoch = data.proposal.votingEndEpoch
-      }
-      this.log.br().log('Votes:')
-      for (const vote of data.votes) {
-        if (vote.isValidator) {
-          vote.power = await chain.fetchValidatorStake(vote.validator, epoch)
-        } else {
-          vote.power = await chain.fetchBondWithSlashing(vote.validator, vote.delegator, epoch)
+      //if (epoch > data.proposal.votingEndEpoch) {
+        //epoch = data.proposal.votingEndEpoch
+      //}
+      for (;epoch > 0n; epoch--) {
+        const stake = await chain.fetchTotalStaked(epoch)
+        this.log.br().log(`Total stake at ${epoch}:`, stake)
+        if (stake === 0n) process.exit(123)
+        this.log.br().log(`Votes at ${epoch}:`)
+        for (const vote of data.votes) {
+          while (true) try {
+            if (vote.isValidator) {
+              vote.power = await chain.fetchValidatorStake(vote.validator, epoch)
+            } else {
+              vote.power = await chain.fetchBondWithSlashing(vote.validator, vote.delegator, epoch)
+            }
+            this.log.log('Vote:', vote)
+            break
+          } catch (e) {
+            console.warn(e)
+            console.info('Retrying in 1s...')
+            await new Promise(resolve=>setTimeout(resolve, 1000))
+          }
+
+          if (vote.power === 1n) process.exit(123)
         }
-        this.log.log(vote)
       }
     } else {
-      this.log.error(`Proporsal ${id} not found.`)
+      this.log.error(`Proposal ${id} not found.`)
     }
   })
 
@@ -430,6 +456,17 @@ export default class UndexerCommands extends Commands {
       .log(await txWithAddressCount({ address }), 'tx(s) with', bold(address))
       .log(await txWithAddressList({ address }))
       .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
+  fetchTotalStake = this.command({
+    name: 'total stake',
+    info: 'query total staked amount',
+    args: '[EPOCH]'
+  }, async (epoch?: number|string|bigint) => {
+    const { default: getRPC } = await import('./src/rpc.js')
+    const chain = await getRPC()
+    const stake = await chain.fetchTotalStaked(epoch)
+    this.log.log('Total staked:', stake)
   })
 
 }
