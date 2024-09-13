@@ -231,6 +231,21 @@ export const routes = [
     res.status(200).send({ count, transfers })
   }],
 
+  ['/transactions/:address', async function dbTransactionsForAddress (req, res) {
+    const { address } = req.params;
+    const { limit, offset } = pagination(req)
+    try {
+      const [count, transactions] = await Promise.all([
+        Query.txWithAddressCount({ address }),
+        Query.txWithAddressList({ address, limit, offset }),
+      ])
+      res.status(200).send({ count, transactions });
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      res.status(500).send({ error: 'Failed to fetch transactions' });
+    }
+  }],
+
   ['/balances/:address', async function dbBalances (req, res) {
     const { address } = req.params;
     try {
@@ -242,7 +257,7 @@ export const routes = [
       console.error('Error fetching balances:', error);
       res.status(500).send({ error: 'Failed to fetch balances' });
     }
-  }],  
+  }],
 
   //['/signed/:address', async function dbAddressInfo (req, res) {
     //const { address } = req.params
