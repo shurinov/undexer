@@ -41,7 +41,15 @@ export async function updateBlocks (chain, events, startHeight, endHeight) {
    * to fetch data for a single block. */
 export async function updateBlock ({ chain, events, height, block, update = false }) {
   const t0 = performance.now()
-  block ??= await chain.fetchBlock({ height, raw: true })
+  if (!block) {
+    while (true) try {
+      block = await chain.fetchBlock({ height, raw: true })
+      break
+    } catch (e) {
+      console.error(e)
+      await new Promise(resolve=>setTimeout(resolve, 1000))
+    }
+  }
   await DB.withErrorLog(() => DB.default.transaction(async dbTransaction => {
     const data = {
       chainId:      block.header.chainId,

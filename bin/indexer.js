@@ -19,7 +19,7 @@ const chain = await getRPC()
 import EventEmitter from "node:events"
 const events = new EventEmitter()
 
-import { tryUpdateValidators } from '../src/validator.js'
+import { tryUpdateValidators, tryUpdateConsensusValidators } from '../src/validator.js'
 events.on("updateValidators", height => tryUpdateValidators(chain, height))
 
 import { tryUpdateProposals, updateProposal } from '../src/proposal.js'
@@ -40,5 +40,6 @@ await Promise.all([
   runForever(BLOCK_UPDATE_INTERVAL,     tryUpdateBlocks,     chain, events),
   runForever(EPOCH_UPDATE_INTERVAL,     tryUpdateEpochs,     chain),
   runForever(VALIDATOR_UPDATE_INTERVAL, tryUpdateValidators, chain),
+  runForever(VALIDATOR_UPDATE_INTERVAL, tryUpdateConsensusValidators, chain),
   runForever(PROPOSAL_UPDATE_INTERVAL,  tryUpdateProposals,  chain),
 ])

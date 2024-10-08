@@ -1,4 +1,5 @@
 import Commands from "@hackbg/cmds"
+import { bold } from "@hackbg/logs"
 import EventEmitter from 'node:events'
 
 export default class UndexerCommands extends Commands {
@@ -9,6 +10,16 @@ export default class UndexerCommands extends Commands {
     super(...args)
     this.log.label = ''
   }
+
+  api = this.command({
+    name: "api",
+    info: "run the API server"
+  }, () => import('./bin/api.js'))
+
+  indexer = this.command({
+    name: "index",
+    info: "run the indexer"
+  }, () => import('./bin/indexer.js'))
 
   dbStatus = this.command({
     name: 'db status',
@@ -54,15 +65,17 @@ export default class UndexerCommands extends Commands {
     this.log.br().log('Done.')
   })
 
-  api = this.command({
-    name: "api",
-    info: "run the API server"
-  }, () => import('./bin/api.js'))
-
-  indexer = this.command({
-    name: "index",
-    info: "run the indexer"
-  }, () => import('./bin/indexer.js'))
+  queries = this.command({
+    name: 'db queries',
+    info: 'test all db queries',
+  }, async () => {
+    for (const [name, item] of Object.entries(await import('./src/query.js'))) {
+      if (typeof item === 'function') {
+        this.log.br().log(name)
+        this.log(await item())
+      }
+    }
+  })
 
   blockFetch = this.command({
     name: 'block fetch',
@@ -120,16 +133,28 @@ export default class UndexerCommands extends Commands {
 
   validatorsFetchList = this.command({
     name: 'validators fetch list',
-    info: 'fetch list of validators'
-  }, async () => {
+    info: 'fetch list of validators',
+    args: '[EPOCH]'
+  }, async (epoch?: string) => {
     const { default: getRPC } = await import('./src/rpc.js')
     const chain = await getRPC()
     const addresses = Object.values(await chain.fetchValidators({
+      epoch,
       tendermintMetadata: false,
       namadaMetadata:     false,
     })).map(v=>v.namadaAddress).sort()
+    if (epoch) {
+      this.log.log(`Validators at epoch ${epoch}:`)
+    } else {
+      this.log.log('Validators at current epoch:')
+    }
     for (const address of addresses) {
       this.log.log('Validator:', address)
+    }
+    if (epoch) {
+      this.log.log(addresses.length, `validator(s) at epoch`, epoch)
+    } else {
+      this.log.log(addresses.length, 'validator(s) at current epoch.')
     }
     this.log.br().info("Use the 'validators fetch all' command to get details.")
   })
@@ -195,16 +220,46 @@ export default class UndexerCommands extends Commands {
     }
   })
 
-  queries = this.command({
-    name: 'queries',
-    info: 'test all db queries',
-  }, async () => {
-    for (const [name, item] of Object.entries(await import('./src/query.js'))) {
-      if (typeof item === 'function') {
-        this.log.br().log(name)
-        this.log(await item())
-      }
-    }
+  becameValidator = this.command({
+    name: 'validator query become',
+    info: 'query tx_become_validator',
+    args: 'ADDRESS',
+  }, async (address: string) => {
+    const { becomeValidatorCount, becomeValidatorList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await becomeValidatorCount({ address }),
+           'becomeValidator(s) for', bold(address))
+      .log(await becomeValidatorList({ address }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
+  changedValidatorMetadata = this.command({
+    name: 'validator query change metadata',
+    info: 'query tx_change_validator_metadata',
+    args: 'ADDRESS',
+  }, async (validator: string) => {
+    const { changeValidatorMetadataCount, changeValidatorMetadataList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await changeValidatorMetadataCount({ validator }),
+           'changeValidatorMetadata(s) for', bold(validator))
+      .log(await changeValidatorMetadataList({ validator }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
+  deactivatedValidator = this.command({
+    name: 'validator query deactivate',
+    info: 'query tx_deactivate_validator',
+    args: 'ADDRESS',
+  }, async (address: string) => {
+    const { deactivateValidatorCount, deactivateValidatorList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await deactivateValidatorCount({ address }),
+           'deactivateValidator(s) for', bold(address))
+      .log(await deactivateValidatorList({ address }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
   })
 
   parameters = this.command({
@@ -237,7 +292,6 @@ export default class UndexerCommands extends Commands {
     if (data) {
       this.log
         .log('Proposal:', data.proposal)
-        .log('Votes:',    data.votes)
         .log('Result:',   data.result)
       if (data.proposal.type?.type === 'DefaultWithWasm') {
         const result = await chain.fetchProposalWasm(id)
@@ -245,8 +299,35 @@ export default class UndexerCommands extends Commands {
           this.log.log('WASM:', result.wasm.length, 'bytes')
         }
       }
+      let epoch = await chain.fetchEpoch()
+      //if (epoch > data.proposal.votingEndEpoch) {
+        //epoch = data.proposal.votingEndEpoch
+      //}
+      for (;epoch > 0n; epoch--) {
+        const stake = await chain.fetchTotalStaked(epoch)
+        this.log.br().log(`Total stake at ${epoch}:`, stake)
+        if (stake === 0n) process.exit(123)
+        this.log.br().log(`Votes at ${epoch}:`)
+        for (const vote of data.votes) {
+          while (true) try {
+            if (vote.isValidator) {
+              vote.power = await chain.fetchValidatorStake(vote.validator, epoch)
+            } else {
+              vote.power = await chain.fetchBondWithSlashing(vote.validator, vote.delegator, epoch)
+            }
+            this.log.log('Vote:', vote)
+            break
+          } catch (e) {
+            console.warn(e)
+            console.info('Retrying in 1s...')
+            await new Promise(resolve=>setTimeout(resolve, 1000))
+          }
+
+          if (vote.power === 1n) process.exit(123)
+        }
+      }
     } else {
-      this.log.error(`Proporsal ${id} not found.`)
+      this.log.error(`Proposal ${id} not found.`)
     }
   })
 
@@ -273,8 +354,71 @@ export default class UndexerCommands extends Commands {
       .then(this.log)
       .catch(this.error))
 
+  transfersBy = this.command({
+    name: 'transfers by',
+    info: 'return transfers for given address',
+    args: 'ADDRESS'
+  }, async (address: string) => {
+    const { transferList } = await import('./src/query.js')
+    const t0 = performance.now()
+    console.log(await transferList({ address }))
+    console.log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
+  bondsFrom = this.command({
+    name: 'bonds from',
+    info: 'return bonds from given source',
+    args: 'ADDRESS'
+  }, async (source: string) => {
+    const { bondCount, bondList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await bondCount({ source }), 'bond(s) from', bold(source))
+      .log(await bondList({ source }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
+  bondsTo = this.command({
+    name: 'bonds to',
+    info: 'return bonds to given validator',
+    args: 'ADDRESS'
+  }, async (validator: string) => {
+    const { bondCount, bondList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await bondCount({ validator }), 'bond(s) to', bold(validator))
+      .log(await bondList({ validator }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
+  unbondsFrom = this.command({
+    name: 'unbonds from',
+    info: 'return unbonds from given source',
+    args: 'ADDRESS'
+  }, async (source: string) => {
+    const { unbondCount, unbondList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await unbondCount({ source }), 'unbond(s) from', bold(source))
+      .log(await unbondList({ source }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
+  unbondsTo = this.command({
+    name: 'unbonds to',
+    info: 'return unbonds to given validator',
+    args: 'ADDRESS'
+  }, async (validator: string) => {
+    const { unbondCount, unbondList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await unbondCount({ validator }), 'unbond(s) to', bold(validator))
+      .log(await unbondList({ validator }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
   reindexTransactions = this.command({
-    name: 'reindex txs',
+    name: 'txs reindex',
     info: 'reindex only blocks containing transactions',
     args: '[MIN_BLOCK]'
   }, async (minHeight: number = 0) => {
@@ -301,15 +445,28 @@ export default class UndexerCommands extends Commands {
     }
   })
 
-  transfersBy = this.command({
-    name: 'transfers by',
-    info: 'return transfers for given adderess',
+  queryTransactions = this.command({
+    name: 'txs query',
+    info: 'query transactions with given address',
     args: 'ADDRESS'
   }, async (address: string) => {
-    const { transferList } = await import('./src/query.js')
-    const t0 = performance.now()
-    console.log(await transferList({ address }))
-    console.log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+    const { txWithAddressCount, txWithAddressList } = await import('./src/query.js')
+    let t0 = performance.now()
+    this.log
+      .log(await txWithAddressCount({ address }), 'tx(s) with', bold(address))
+      .log(await txWithAddressList({ address }))
+      .log(`Done in ${(performance.now() - t0).toFixed(3)}msec`)
+  })
+
+  fetchTotalStake = this.command({
+    name: 'total stake',
+    info: 'query total staked amount',
+    args: '[EPOCH]'
+  }, async (epoch?: number|string|bigint) => {
+    const { default: getRPC } = await import('./src/rpc.js')
+    const chain = await getRPC()
+    const stake = await chain.fetchTotalStaked(epoch)
+    this.log.log('Total staked:', stake)
   })
 
 }

@@ -267,50 +267,268 @@ export const transactionsLatest = ({ limit = 15 } = {}) =>
 export const transactionsAtHeight = (blockHeight = 0) =>
   DB.Transaction.findAndCountAll({ where: { blockHeight } })
 
-export const transferredTokens = async () => {
-  return await db.query(`
-    WITH "transactionData" AS (
-      SELECT
-        jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
-      FROM "transactions"
-      WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
+const toCount = query => query.then(query=>Number(query[0][0].count))
+
+export const becomeValidatorCount = async ({ address = "" }) => await toCount(db.query(`
+  SELECT COUNT(*) FROM "transactions"
+  WHERE "txData"->'data'->'content'->'type' = '"tx_become_validator.wasm"'
+  AND "txData"->'data'->'content'->'data'->'address' = :address
+`, {
+  replacements: { address: JSON.stringify(address), }
+}))
+
+export const becomeValidatorList = async ({
+  address = "",
+  limit   = 100,
+  offset  = 0
+}) => await db.query(`
+  SELECT "blockHeight", "txHash", "txTime", "txData"->'data'->'content'->'data' as data
+  FROM   "transactions"
+  WHERE  "txData"->'data'->'content'->'type' = '"tx_become_validator.wasm"'
+  AND    "txData"->'data'->'content'->'data'->'address' = :address
+  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
+`, {
+  type: QueryTypes.SELECT, replacements: {
+    address: JSON.stringify(address),
+    limit,
+    offset,
+  }
+})
+
+export const changeValidatorMetadataCount = async ({ validator = "" }) => await toCount(db.query(`
+  SELECT COUNT(*) FROM "transactions"
+  WHERE "txData"->'data'->'content'->'type' = '"tx_change_validator_metadata.wasm"'
+  AND "txData"->'data'->'content'->'data'->'validator' = :validator
+`, {
+  replacements: { validator: JSON.stringify(validator), }
+}))
+
+export const changeValidatorMetadataList = async ({
+  validator = "",
+  limit   = 100,
+  offset  = 0
+}) => await db.query(`
+  SELECT "blockHeight", "txHash", "txTime", "txData"->'data'->'content'->'data' as data
+  FROM   "transactions"
+  WHERE  "txData"->'data'->'content'->'type' = '"tx_change_validator_metadata.wasm"'
+  AND    "txData"->'data'->'content'->'data'->'validator' = :validator
+  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
+`, {
+  type: QueryTypes.SELECT, replacements: {
+    validator: JSON.stringify(validator),
+    limit,
+    offset,
+  }
+})
+
+export const deactivateValidatorCount = async ({ address = "" }) => await toCount(db.query(`
+  SELECT COUNT(*) FROM "transactions"
+  WHERE "txData"->'data'->'content'->'type' = '"tx_deactivate_validator.wasm"'
+  AND "txData"->'data'->'content'->'data'->'address' = :address
+`, {
+  replacements: { address: JSON.stringify(address), }
+}))
+
+export const deactivateValidatorList = async ({
+  address = "",
+  limit   = 100,
+  offset  = 0
+}) => await db.query(`
+  SELECT "blockHeight", "txHash", "txTime", "txData"->'data'->'content'->'data' as data
+  FROM   "transactions"
+  WHERE  "txData"->'data'->'content'->'type' = '"tx_deactivate_validator.wasm"'
+  AND    "txData"->'data'->'content'->'data'->'address' = :address
+  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
+`, {
+  type: QueryTypes.SELECT, replacements: {
+    address: JSON.stringify(address),
+    limit,
+    offset,
+  }
+})
+
+export const bondCount = async ({ source = "", validator = "" }) => await toCount(db.query(`
+  SELECT COUNT(*) FROM "transactions"
+  WHERE "txData"->'data'->'content'->'type' = '"tx_bond.wasm"'
+  AND (
+    "txData"->'data'->'content'->'data'->'source' = :source
+    OR
+    "txData"->'data'->'content'->'data'->'validator' = :validator
+  )
+`, {
+  replacements: {
+    source:    JSON.stringify(source),
+    validator: JSON.stringify(validator)
+  }
+}))
+
+export const bondList = async ({
+  source    = "",
+  validator = "",
+  limit     = 100,
+  offset    = 0
+}) => await db.query(`
+  SELECT "blockHeight", "txHash", "txTime", "txData"->'data'->'content'->'data' as data
+  FROM   "transactions"
+  WHERE  "txData"->'data'->'content'->'type' = '"tx_bond.wasm"'
+  AND (
+    "txData"->'data'->'content'->'data'->'source' = :source
+    OR
+    "txData"->'data'->'content'->'data'->'validator' = :validator
+  )
+  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
+`, {
+  type: QueryTypes.SELECT, replacements: {
+    source:    JSON.stringify(source),
+    validator: JSON.stringify(validator),
+    limit,
+    offset
+  }
+})
+
+export const unbondCount = async ({ source = "", validator = "" }) => await toCount(db.query(`
+  SELECT COUNT(*) FROM "transactions"
+  WHERE "txData"->'data'->'content'->'type' = '"tx_unbond.wasm"'
+  AND (
+    "txData"->'data'->'content'->'data'->'source' = :source
+    OR
+    "txData"->'data'->'content'->'data'->'validator' = :validator
+  )
+`, {
+  replacements: {
+    source:    JSON.stringify(source),
+    validator: JSON.stringify(validator)
+  }
+}))
+
+export const unbondList = async ({
+  source    = "",
+  validator = "",
+  limit     = 100,
+  offset    = 0
+}) => await db.query(`
+  SELECT "blockHeight", "txHash", "txTime", "txData"->'data'->'content'->'data' as data
+  FROM   "transactions"
+  WHERE  "txData"->'data'->'content'->'type' = '"tx_unbond.wasm"'
+  AND (
+    "txData"->'data'->'content'->'data'->'source' = :source
+    OR
+    "txData"->'data'->'content'->'data'->'validator' = :validator
+  )
+  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
+`, {
+  type: QueryTypes.SELECT, replacements: {
+    source:    JSON.stringify(source),
+    validator: JSON.stringify(validator),
+    limit,
+    offset
+  }
+})
+
+export const txWithAddressCount = async ({ address = "" }) => await toCount(db.query(`
+  SELECT COUNT(*) FROM "transactions" WHERE (
+    (
+      "txData"->'data'->'content'->'type' = '"tx_bond.wasm"'
+      OR
+      "txData"->'data'->'content'->'type' = '"tx_unbond.wasm"'
+    ) AND (
+      "txData"->'data'->'content'->'data'->'source' = :address
+      OR
+      "txData"->'data'->'content'->'data'->'validator' = :address
     )
-    SELECT
-      jsonb_path_query("txData", '$.source[*].token') AS source_token,
-      jsonb_path_query("txData", '$.target[*].token') AS target_token
-    FROM "transactionData"
-  `)
-}
+  ) OR (
+    (
+      "txData"->'data'->'content'->'type' = '"tx_become_validator.wasm"'
+      OR
+      "txData"->'data'->'content'->'type' = '"tx_deactivate_validator.wasm"'
+    )
+    AND "txData"->'data'->'content'->'data'->'address' = :address
+  ) OR (
+    "txData"->'data'->'content'->'type' = '"tx_change_validator_metadata.wasm"'
+    AND
+    "txData"->'data'->'content'->'data'->'validator' = :address
+  )
+`, {
+  replacements: {
+    address: JSON.stringify(address)
+  }
+}))
+
+export const txWithAddressList = async ({
+  address   = "",
+  limit     = 100,
+  offset    = 0
+}) => await db.query(`
+  SELECT * FROM "transactions" WHERE (
+    (
+      "txData"->'data'->'content'->'type' = '"tx_bond.wasm"'
+      OR
+      "txData"->'data'->'content'->'type' = '"tx_unbond.wasm"'
+    ) AND (
+      "txData"->'data'->'content'->'data'->'source' = :address
+      OR
+      "txData"->'data'->'content'->'data'->'validator' = :address
+    )
+  ) OR (
+    (
+      "txData"->'data'->'content'->'type' = '"tx_become_validator.wasm"'
+      OR
+      "txData"->'data'->'content'->'type' = '"tx_deactivate_validator.wasm"'
+    )
+    AND "txData"->'data'->'content'->'data'->'address' = :address
+  ) OR (
+      "txData"->'data'->'content'->'type' = '"tx_change_validator_metadata.wasm"'
+      AND
+      "txData"->'data'->'content'->'data'->'validator' = :address
+  )
+  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
+`, {
+  type: QueryTypes.SELECT, replacements: {
+    address: JSON.stringify(address),
+    limit,
+    offset
+  }
+})
+
+export const transferredTokens = async () => await db.query(`
+  WITH "transactionData" AS (
+    SELECT jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
+    FROM  "transactions"
+    WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
+  )
+  SELECT
+    jsonb_path_query("txData", '$.source[*].token') AS source_token,
+    jsonb_path_query("txData", '$.target[*].token') AS target_token
+  FROM "transactionData"
+`)
 
 export const transferCount = async ({
   address = "",
   source  = address,
   target  = address,
-}) => {
-  return Number((await db.query(`
-    WITH
-      "transactionData" AS (
-        SELECT
-          jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
-        FROM "transactions"
-        WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
-      ),
-      "transfers" AS (
-        SELECT
-          jsonb_path_query("txData", '$.sources[*].owner') AS source,
-          jsonb_path_query("txData", '$.targets[*].owner') AS target
-        FROM "transactionData"
-      )
-    SELECT COUNT(*) FROM "transfers"
-    WHERE "source" = :source OR "target" = :target
-  `, {
-    type: QueryTypes.COUNT,
-    replacements: {
-      source: JSON.stringify(source),
-      target: JSON.stringify(target),
-    }
-  }))[0][0].count)
-}
+}) => await toCount(db.query(`
+  WITH
+    "transactionData" AS (
+      SELECT
+        jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
+      FROM "transactions"
+      WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
+    ),
+    "transfers" AS (
+      SELECT
+        jsonb_path_query("txData", '$.sources[*].owner') AS source,
+        jsonb_path_query("txData", '$.targets[*].owner') AS target
+      FROM "transactionData"
+    )
+  SELECT COUNT(*) FROM "transfers"
+  WHERE "source" = :source OR "target" = :target
+`, {
+  type: QueryTypes.COUNT,
+  replacements: {
+    source: JSON.stringify(source),
+    target: JSON.stringify(target),
+  }
+}))
 
 export const transferList = async ({
   address = "",
@@ -321,20 +539,20 @@ export const transferList = async ({
 }) => {
   return await db.query(`
     WITH
-
       "transactionData" AS (
         SELECT
           "blockHeight",
           "txHash",
+          "txTime",
           jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
         FROM "transactions"
         WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"'
       ),
-
       "transfers" AS (
         SELECT
           "blockHeight",
           "txHash",
+          "txTime",
           jsonb_path_query("txData", '$.sources[*].owner') AS source,
           jsonb_path_query("txData", '$.sources[*].token') AS sourceToken,
           jsonb_path_query("txData", '$.sources[*][1]')    AS sourceAmount,
@@ -343,7 +561,6 @@ export const transferList = async ({
           jsonb_path_query("txData", '$.targets[*][1]')    AS targetAmount
         FROM "transactionData"
       )
-
     SELECT * FROM "transfers"
     WHERE "source" = :source OR "target" = :target
     ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset

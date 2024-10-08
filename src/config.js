@@ -70,6 +70,44 @@ export const GOVERNANCE_TRANSACTIONS = [
   "tx_init_proposal.wasm"
 ]
 
+export const TOKENS = [
+  {
+    "address": "tnam1q87wtaqqtlwkw927gaff34hgda36huk0kgry692a",
+    "symbol": "NAM",
+    "coin": "Namada"
+  },
+  {
+    "address": "tnam1qyfl072lhaazfj05m7ydz8cr57zdygk375jxjfwx",
+    "symbol": "DOT",
+    "coin": "Polkadot"
+  },
+  {
+    "address": "tnam1qxvnvm2t9xpceu8rup0n6espxyj2ke36yv4dw6q5",
+    "symbol": "ETH",
+    "coin": "Ethereum"
+  },
+  {
+    "address": "tnam1qy8qgxlcteehlk70sn8wx2pdlavtayp38vvrnkhq",
+    "symbol": "BTC",
+    "coin": "Bitcoin"
+  },
+  {
+    "address": "tnam1q9f5yynt5qfxe28ae78xxp7wcgj50fn4syetyrj6",
+    "symbol": "SCH",
+    "coin": "Schnitzel"
+  },
+  {
+    "address": "tnam1qyvfwdkz8zgs9n3qn9xhp8scyf8crrxwuq26r6gy",
+    "symbol": "APF",
+    "coin": "Apfel"
+  },
+  {
+    "address": "tnam1qyx93z5ma43jjmvl0xhwz4rzn05t697f3vfv8yuj",
+    "symbol": "KAR",
+    "coin": "Kartoffel"
+  }
+]
+
 import { fileURLToPath } from 'node:url'
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   console.log('Current configuration:', {
@@ -90,5 +128,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     EPOCH_UPDATE_INTERVAL,
     VALIDATOR_TRANSACTIONS,
     GOVERNANCE_TRANSACTIONS,
+    TOKENS,
   })
 }

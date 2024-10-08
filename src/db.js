@@ -78,7 +78,12 @@ export const NullableJSONField = name => ({
   type: JSONB,
   allowNull: true,
   set (value) {
-    return this.setDataValue(name, JSON.parse(serialize(value)));
+    if (value === undefined) {
+      this.setDataValue(name, null);
+    }
+    else {
+      this.setDataValue(name, JSON.parse(serialize(value)));
+    }
   },
 })
 

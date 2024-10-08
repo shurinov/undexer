@@ -4,7 +4,7 @@ import { Op, literal } from 'sequelize';
 import * as DB from './db.js';
 import * as RPC from './rpc.js';
 import * as Query from './query.js';
-import { CHAIN_ID, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from './config.js';
+import { CHAIN_ID, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET, TOKENS } from './config.js';
 
 const NOT_IMPLEMENTED = (req, res) => { throw new Error('not implemented') }
 
@@ -229,6 +229,34 @@ export const routes = [
       Query.transferList({ address, source, target, limit, offset }),
     ])
     res.status(200).send({ count, transfers })
+  }],
+
+  ['/transactions/:address', async function dbTransactionsForAddress (req, res) {
+    const { address } = req.params;
+    const { limit, offset } = pagination(req)
+    try {
+      const [count, transactions] = await Promise.all([
+        Query.txWithAddressCount({ address }),
+        Query.txWithAddressList({ address, limit, offset }),
+      ])
+      res.status(200).send({ count, transactions });
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      res.status(500).send({ error: 'Failed to fetch transactions' });
+    }
+  }],
+
+  ['/balances/:address', async function dbBalances (req, res) {
+    const { address } = req.params;
+    try {
+      const chain = await RPC.default();
+      const tokens = TOKENS.map(token=>token.address);
+      const balances = await chain.fetchBalance(address, tokens);
+      res.status(200).send({ balances: balances[address] });
+    } catch (error) {
+      console.error('Error fetching balances:', error);
+      res.status(500).send({ error: 'Failed to fetch balances' });
+    }
   }],
 
   //['/signed/:address', async function dbAddressInfo (req, res) {
