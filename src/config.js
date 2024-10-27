@@ -6,7 +6,7 @@ export const DEFAULT_PAGE_LIMIT = 25
 export const DEFAULT_PAGE_OFFSET = 0
 
 export const CHAIN_ID =
-  process.env.CHAIN_ID || 'housefire-head.a03c8e8948ed20b'
+  process.env.CHAIN_ID || 'housefire-cotton.d3c912fee7462'
 
 export const DATABASE_URL =
   process.env.DATABASE_URL || `postgres://postgres:insecure@localhost:5432/${CHAIN_ID}`
@@ -72,37 +72,37 @@ export const GOVERNANCE_TRANSACTIONS = [
 
 export const TOKENS = [
   {
-    "address": "tnam1q87wtaqqtlwkw927gaff34hgda36huk0kgry692a",
+    "address": "tnam1qy440ynh9fwrx8aewjvvmu38zxqgukgc259fzp6h",
     "symbol": "NAM",
     "coin": "Namada"
   },
   {
-    "address": "tnam1qyfl072lhaazfj05m7ydz8cr57zdygk375jxjfwx",
+    "address": "tnam1qyzv6anc548dyj0nqvezrxxd6679d0a02y78k3xx",
     "symbol": "DOT",
     "coin": "Polkadot"
   },
   {
-    "address": "tnam1qxvnvm2t9xpceu8rup0n6espxyj2ke36yv4dw6q5",
+    "address": "tnam1q9046ls453j29xp0g90vm05dpped9adweyjnplkl",
     "symbol": "ETH",
     "coin": "Ethereum"
   },
   {
-    "address": "tnam1qy8qgxlcteehlk70sn8wx2pdlavtayp38vvrnkhq",
+    "address": "tnam1qy4u69pe54hyssg9g42equq0z2vrj9rlnsrfcu6l",
     "symbol": "BTC",
     "coin": "Bitcoin"
   },
   {
-    "address": "tnam1q9f5yynt5qfxe28ae78xxp7wcgj50fn4syetyrj6",
+    "address": "tnam1qxkdfqv2shgyllcf7dq5qlvf8gt6a2kr0s33ye26",
     "symbol": "SCH",
     "coin": "Schnitzel"
   },
   {
-    "address": "tnam1qyvfwdkz8zgs9n3qn9xhp8scyf8crrxwuq26r6gy",
+    "address": "tnam1qy4pd2j2wkp34c49epd5wy9ny83qsedekgac6gyr",
     "symbol": "APF",
     "coin": "Apfel"
   },
   {
-    "address": "tnam1qyx93z5ma43jjmvl0xhwz4rzn05t697f3vfv8yuj",
+    "address": "tnam1q982u50dxneydrlne6nfhrcwxc5mlxtpssjjdp3q",
     "symbol": "KAR",
     "coin": "Kartoffel"
   }
